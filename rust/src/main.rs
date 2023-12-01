@@ -1,7 +1,7 @@
 extern crate rust;
 
 fn main() {
-    let args = rust::parse();
+    let args = rust::parse::parse();
     println!("args: {:?}", args);
     let filename = match (args.test, args.file) {
         // The user passed no file-related options.
