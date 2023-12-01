@@ -11,16 +11,16 @@ Custom input files can also be passed, like so:
 python main.py 2023 1 a --file custom_input.txt
 ";
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 #[command(long_about = USAGE_MESSAGE)]
 pub struct Args {
-    year: String,
-    day: String,
-    part: String,
+    pub year: String,
+    pub day: String,
+    pub part: String,
     #[clap(short, long)]
-    test: bool,
+    pub test: bool,
     #[clap(short, long)]
-    file: Option<String>,
+    pub file: Option<String>,
 }
 
 pub fn parse() -> Args {
