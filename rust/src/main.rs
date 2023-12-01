@@ -14,4 +14,9 @@ fn main() {
         (true, Some(_)) => panic!("Cannot pass both --test and --file"),
     };
     println!("filename: {}", filename);
+
+    let path = format!("../inputs/{}/{}/{}/{}", args.year, args.day, args.part, filename);
+    // Error if the file doesn't exist.
+    let contents = std::fs::read_to_string(path).expect("Failed to read input file");
+    println!("contents: {}", contents);
 }
