@@ -16,8 +16,8 @@ pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
                         first_num = Some(num);
                     }
                     last_num = Some(num);
-                },
-                None => {},
+                }
+                None => {}
             }
             match find_num_word(&line[i..]) {
                 Some(num) => {
@@ -25,8 +25,8 @@ pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
                         first_num = Some(num as u32);
                     }
                     last_num = Some(num as u32);
-                },
-                None => {},
+                }
+                None => {}
             }
         }
         match (first_num, last_num) {
@@ -47,7 +47,6 @@ fn find_num_word(line: &str) -> Option<i32> {
     }
     None
 }
-
 
 fn word_to_num_map() -> HashMap<&'static str, i32> {
     HashMap::from([

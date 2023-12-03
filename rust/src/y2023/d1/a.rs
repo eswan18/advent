@@ -11,8 +11,8 @@ pub fn run_a(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
                         first_num = Some(num);
                     }
                     last_num = Some(num);
-                },
-                None => {},
+                }
+                None => {}
             }
         }
         match (first_num, last_num) {

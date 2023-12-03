@@ -9,8 +9,13 @@ pub struct Game {
 impl Game {
     pub fn new_from_line(line: &str) -> Game {
         let parts = line.split(": ").collect::<Vec<&str>>();
-        let id = parts[0].split(' ').collect::<Vec<&str>>()[1].parse::<u32>().unwrap();
-        let draws = parts[1].split("; ").map(|s| Draw::new_from_str(s)).collect::<Vec<Draw>>();
+        let id = parts[0].split(' ').collect::<Vec<&str>>()[1]
+            .parse::<u32>()
+            .unwrap();
+        let draws = parts[1]
+            .split("; ")
+            .map(|s| Draw::new_from_str(s))
+            .collect::<Vec<Draw>>();
         Game { id, draws }
     }
 
