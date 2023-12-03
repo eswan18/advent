@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-SYMBOLS = '#+*$'
-
 @dataclass
 class Number:
     value: int
