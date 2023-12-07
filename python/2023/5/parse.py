@@ -29,37 +29,6 @@ class MappingRange:
             return None
         return destination - self.delta
     
-    def destination_overlaps(self, other: 'MappingRange') -> bool:
-        return (self.destination_start <= other.source_start <= self.destination_end) or (other.destination_start <= self.source_start <= other.destination_end)
-    
-    def reduce(self, other: 'MappingRange') -> list['MappingRange']:
-        print(f'reducing {self} and {other}')
-        # If the ranges don't overlap, just error.
-        if not self.destination_overlaps(other):
-            raise ValueError('Ranges do not overlap')
-        if other.destination_start <= self.destination_start <= other.destination_end:
-            beginning_of_overlap = self.source_start
-        else:
-            beginning_of_overlap = other.destination_start - self.delta
-        if other.destination_start <= self.destination_end <= other.destination_end:
-            end_of_overlap = self.source_end
-        else:
-            end_of_overlap = other.destination_end - self.delta
-        overlap_range = MappingRange(beginning_of_overlap, end_of_overlap, self.delta + other.delta)
-        new_ranges = [overlap_range]
-        if self.source_start < beginning_of_overlap:
-            new_ranges.append(MappingRange(self.source_start, beginning_of_overlap - 1, self.delta))
-        if other.source_start < beginning_of_overlap:
-            new_ranges.append(MappingRange(other.source_start, beginning_of_overlap - 1, other.delta))
-        if self.source_end > end_of_overlap:
-            new_ranges.append(MappingRange(end_of_overlap + 1, self.source_end, self.delta))
-        if other.source_end > end_of_overlap:
-            new_ranges.append(MappingRange(end_of_overlap + 1, other.source_end, other.delta))
-        print('new ranges:')
-        for range in new_ranges:
-            print(range)
-        return new_ranges
-
     def __str__(self) -> str:
         return f'[{self.source_start}-{self.source_end}]  ({"+" if self.delta > 1 else ""}{self.delta})'
     
@@ -89,39 +58,12 @@ class Mapping:
         ranges = sorted([MappingRange.from_line(line) for line in lines], key=lambda r: r.source_start)
         return cls(ranges)
     
-    def reduce(self, other: 'Mapping') -> 'Mapping':
-        ranges = sorted(self.ranges.copy(), key=lambda r: r.destination_start)
-        other_ranges = sorted(other.ranges.copy(), key=lambda r: r.source_start)
-        unused_other_ranges = []
-        new_ranges = []
-        self_idx = 0
-        other_idx = 0
-        while self_idx < len(ranges) and other_idx < len(other_ranges):
-            range = ranges[self_idx]
-            other_range = other_ranges[other_idx]
-            if range.destination_overlaps(other_range):
-                new_ranges.extend(range.reduce(other_range))
-                self_idx += 1
-                other_idx += 1
-            else:
-                # If the ranges don't overlap, just keep the one that starts first and repeat.
-                if range.destination_start < other_range.destination_start:
-                    new_ranges.append(range)
-                    self_idx += 1
-                else:
-                    unused_other_ranges.append(other_range)
-                    other_idx += 1
-        # If we still have some leftover ranges, add them.
-        remaining_ranges = ranges[self_idx:] + other_ranges[other_idx:]
-        new_ranges.extend(remaining_ranges)
-        return self.__class__(new_ranges)
-
-   
 
 @dataclass
 class Game:
-    seeds: list[int]
+    seeds: list[int] | list[(int, int)]
     maps: list[list[MappingRange]]
+    seeds_type: str = 'list'
 
     @classmethod
     def from_str(cls, input: str, seeds_type: str = 'list') -> 'Game':
@@ -136,14 +78,13 @@ class Game:
             seed_entries = [int(seed) for seed in seed_line.split(': ')[1].split()]
             # Take two seeds at a time
             for start, length in zip(seed_entries[::2], seed_entries[1::2]):
-                new_seeds = list(range(start, start + length - 1))
-                seeds.extend(new_seeds)
+                seeds.append((start, start + length - 1))
             # Remove duplicates.
             seeds = list(set(seeds))
         else:
             raise ValueError(f'Unknown seeds type {seeds_type}')
         maps = [Mapping.from_lines(section.splitlines()[1:]) for section in sections]
-        return cls(seeds=seeds, maps=maps)
+        return cls(seeds=seeds, maps=maps, seeds_type=seeds_type)
     
     def get_final_translations(self) -> list[int]:
         translations = self.seeds
@@ -151,11 +92,30 @@ class Game:
             translations = [mapping.translate(translation) for translation in translations]
         return translations
     
-    def reduce(self) -> None:
-        while len(self.maps) > 1:
-            self.maps[0] = self.maps[0].reduce(self.maps[1])
-            self.maps.pop(1)
-
+    def backward_translate(self, destination: int) -> int | None:
+        # Start with the destination
+        translation = destination
+        for mapping in reversed(self.maps):
+            translation = mapping.backward_translate(translation)
+            if translation is None:
+                return None
+        return translation
+    
+    def destination_ranges(self) -> list[(int, int)]:
+        ranges = []
+        for range in self.maps[-1].ranges:
+            ranges.append((range.destination_start, range.destination_end))
+        ranges = sorted(ranges, key=lambda r: r[0])
+        return ranges
+    
+    def has_seed(self, seed: int) -> bool:
+        if self.seeds_type == 'list':
+            return seed in self.seeds
+        else:
+            for start, end in self.seeds:
+                if seed >= start and seed <= end:
+                    return True
+    
 
 def parse(input: str, seeds_type='list') -> Game:
     return Game.from_str(input, seeds_type=seeds_type)
