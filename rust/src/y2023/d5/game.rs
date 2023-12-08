@@ -1,8 +1,8 @@
-use super::range::Range;
+use super::seeds::{SeedSet, SeedsType};
 use super::mapping::Mapping;
 
 pub struct Game {
-    seeds: SeedSet,
+    pub seeds: SeedSet,
     layers: Vec<Layer>,
 }
 
@@ -15,6 +15,14 @@ impl Game {
         let mut result = source;
         for layer in &self.layers {
             result = layer.map(result);
+        }
+        result
+    }
+
+    pub fn back_map(&self, target: i64 ) -> i64 {
+        let mut result = target;
+        for layer in self.layers.iter().rev() {
+            result = layer.back_map(result);
         }
         result
     }
@@ -36,34 +44,11 @@ impl Game {
             _ => panic!("final_locations() only works for SeedSet::List"),
         }
     }
-}
-
-enum SeedSet {
-    List(Vec<i64>),
-    RangeList(Vec<Range>),
-}
-
-impl SeedSet {
-    pub fn new_from_line(line: &str, seeds_type: SeedsType) -> Self {
-        let value_str = line.split(": ").collect::<Vec<&str>>()[1];
-        let values = value_str.split(' ').map(|s| s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
-        return match seeds_type {
-            SeedsType::List => Self::List(values),
-            SeedsType::RangeList => {
-                let mut ranges = Vec::new();
-                // Take values in pairs.
-                for i in 0..values.len() / 2 {
-                    let start = values[i * 2];
-                    let length = values[i * 2 + 1];
-                    ranges.push(Range::new(start, start + length - 1));
-                }
-                Self::RangeList(ranges)
-            }
-        }
+    
+    pub fn max_final_destination(&self) -> i64 {
+        self.layers.iter().last().unwrap().max_destination()
     }
 }
-
-pub enum SeedsType { List, RangeList }
 
 #[derive(Debug)]
 struct Layer {
@@ -81,6 +66,16 @@ impl Layer {
         source
     }
 
+    fn back_map(&self, target: i64 ) -> i64 {
+        for mapping in &self.mappings {
+            let result = mapping.back_map(target);
+            if let Some(val) = result {
+                return val;
+            }
+        }
+        target
+    }
+
     pub fn new_from_str(contents: &str) -> Self {
         let mut lines = contents.lines();
         // The first line is just a text name.
@@ -88,5 +83,9 @@ impl Layer {
         // The remaining lines are mappings.
         let mappings = lines.map(|line| Mapping::new_from_line(line)).collect::<Vec<Mapping>>();
         Self { mappings }
+    }
+
+    pub fn max_destination(&self) -> i64 {
+        self.mappings.iter().map(|mapping| mapping.destination_range().end).max().unwrap()
     }
 }

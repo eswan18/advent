@@ -1,8 +1,8 @@
 // Ranges are inclusive.
 #[derive(Debug)]
 pub struct Range {
-    start: i64,
-    end: i64,
+    pub start: i64,
+    pub end: i64,
 }
 
 impl Range {

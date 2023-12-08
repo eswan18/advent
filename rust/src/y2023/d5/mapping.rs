@@ -7,7 +7,7 @@ pub struct Mapping {
 }
 
 impl Mapping {
-    fn destination_range(&self) -> Range {
+    pub fn destination_range(&self) -> Range {
         self.source_range.transform(self.delta)
     }
 

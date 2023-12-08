@@ -1,4 +1,5 @@
-use super::game::{Game, SeedsType};
+use super::game::Game;
+use super::seeds::SeedsType;
 
 pub fn run_a(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
     let game = Game::new_from_str(contents, SeedsType::List);
