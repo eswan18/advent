@@ -104,7 +104,7 @@ impl Hand {
             }
         }
 
-        for card in &self.cards {
+        for card in cards {
             let card_value = card.value(self.jokers_wild);
             if let Some(count) = card_counts.get_mut(&card_value) {
                 *count += 1;

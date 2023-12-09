@@ -21,7 +21,8 @@ pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
     });
     let mut winnings = 0;
     for (i, hand) in hands.iter().enumerate() {
-        winnings += hand.bid * (i as u32 + 1);
+        let hand_score = hand.bid * (i as u32 + 1);
+        winnings += hand_score;
     }
     Ok(winnings.to_string())
 }
