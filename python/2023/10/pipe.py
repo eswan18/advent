@@ -127,11 +127,11 @@ class Grid:
 @dataclass
 class PositionWithDirection:
     position: tuple[int, int]
-    direction: Direction
+    direction: Direction | None
 
 @dataclass
 class TraversalState:
-    positions: tuple[PositionWithDirection, PositionWithDirection]
+    paths: tuple[list[PositionWithDirection], list[PositionWithDirection]]
     seen: Counter[tuple[int, int]]
 
     @classmethod
@@ -158,22 +158,25 @@ class TraversalState:
             case _:
                 raise ValueError(f'Cannot build traversal state from {start_pos} and {start_pipe}')
         seen = Counter([start_pos, a.position, b.position])
-        return cls((a, b), seen)
+        path_a = [start_pos, a]
+        path_b = [start_pos, b]
+        return cls((path_a, path_b), seen)
 
     def next(self, grid: Grid) -> 'TraversalState':
-        next_positions = []
+        next_paths = []
         seen = self.seen
-        for position in self.positions:
+        for path in self.paths:
+            position = path[-1]
             next_position = self.next_position(position, grid)
-            next_positions.append(next_position)
+            next_paths.append(path + [next_position])
             seen[next_position.position] += 1
-        return TraversalState(tuple(next_positions), self.seen)
+        return TraversalState(tuple(next_paths), self.seen)
     
     def has_looped(self) -> bool:
         return any(count > 1 for count in self.seen.values())
     
     def n_steps(self) -> int:
-        return (sum(self.seen.values()) - 1) / 2
+        return len(self.paths[0]) - 1
     
     def next_position(self, position: PositionWithDirection, grid: Grid) -> PositionWithDirection:
         x, y = position.position
