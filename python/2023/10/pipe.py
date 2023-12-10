@@ -1,6 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from collections import Counter
+from itertools import product
 
 
 class Direction(StrEnum):
@@ -157,9 +158,10 @@ class TraversalState:
                 b = PositionWithDirection((start_pos[0] + 1, start_pos[1]), Direction.right)
             case _:
                 raise ValueError(f'Cannot build traversal state from {start_pos} and {start_pipe}')
+        start_pos_w_direction = PositionWithDirection(start_pos, None)
         seen = Counter([start_pos, a.position, b.position])
-        path_a = [start_pos, a]
-        path_b = [start_pos, b]
+        path_a = [start_pos_w_direction, a]
+        path_b = [start_pos_w_direction, b]
         return cls((path_a, path_b), seen)
 
     def next(self, grid: Grid) -> 'TraversalState':
@@ -194,3 +196,89 @@ class TraversalState:
             case _:
                 raise ValueError(f'Cannot get next position from {position}')
         return PositionWithDirection(next_position, new_direction)
+
+    def all_unique_points(self) -> set[tuple[int, int]]:
+        return set(position.position for path in self.paths for position in path)
+    
+    def as_perimeter(self, grid: Grid) -> 'Perimeter':
+        return Perimeter(self.all_unique_points(), grid)
+    
+    def show_on_grid(self, grid: Grid) -> str:
+        len_y = len(grid.tiles)
+        len_x = len(grid.tiles[0])
+        s = ''
+        for y in range(len_y):
+            for x in range(len_x):
+                if (x, y) in self.all_unique_points():
+                    s += '*'
+                else:
+                    s += ' '
+            s += '\n'
+        return s
+
+
+@dataclass
+class Perimeter:
+    points: set[tuple[int, int]]
+    grid: Grid
+
+    def count_points_inside(self) -> int:
+        return len(self.points_inside())
+    
+    def points_inside(self) -> set[tuple[int, int]]:
+        len_y = len(self.grid.tiles)
+        len_x = len(self.grid.tiles[0])
+        points = set()
+        for point in product(range(len_x), range(len_y)):
+            if self.test_point_inside(point):
+                points.add(point)
+        return points
+
+    def test_point_inside(self, point: tuple[int, int]) -> bool:
+        if point in self.points:
+            return False
+        intersection_count = self.raycast_intersections(point)
+        return intersection_count % 2 == 1
+    
+    def raycast_intersections(self, point: tuple[int, int]) -> int:
+        x, y = point
+        intersections = 0
+        last_seen_bend = None
+        while y < len(self.grid.tiles):
+            if (x, y) in self.points:
+                # Ignoring vertical pipes ensures that there's always an even number of
+                # intersections if we run along the "edge" of the shape.
+                tile = self.grid.tiles[y][x]
+                match tile:
+                    case Pipe.horizontal:
+                        intersections += 1
+                    case Pipe.bend_l | Pipe.bend_j | Pipe.bend_7 | Pipe.bend_f:
+                        if last_seen_bend is None:
+                            last_seen_bend = tile
+                        else:
+                            # This wackiness is how we handle deciding whether we've "crossed" over the line.
+                            # Going left twice (or right twice) in a row means we've merely run tangent to an edge;
+                            # going left then right (or vice versa) means we've crossed over an edge.
+                            both_left = Direction.left in tile.connectors() and Direction.left in last_seen_bend.connectors()
+                            both_right = Direction.right in tile.connectors() and Direction.right in last_seen_bend.connectors()
+                            if not both_left and not both_right:
+                                intersections += 1
+                            last_seen_bend = None
+            y += 1
+        return intersections
+    
+    def __str__(self) -> str:
+        len_y = len(self.grid.tiles)
+        len_x = len(self.grid.tiles[0])
+        points_inside = self.points_inside()
+        s = ''
+        for y in range(len_y):
+            for x in range(len_x):
+                if (x, y) in self.points:
+                    s += '*'
+                elif (x, y) in points_inside:
+                    s += 'I'
+                else:
+                    s += 'O'
+            s += '\n'
+        return s

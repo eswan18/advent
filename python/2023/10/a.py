@@ -7,5 +7,4 @@ def a(input: str) -> str:
     while True:
         state = state.next(grid)
         if state.has_looped():
-            print(state.seen)
             return str(state.n_steps())
