@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import StrEnum
+from collections import Counter
 
 
 class Direction(StrEnum):
@@ -121,3 +122,72 @@ class Grid:
                 return Pipe.horizontal
             case _:
                 raise ValueError(f'Could not impute starting pipe for {start_pos}')
+            
+
+@dataclass
+class PositionWithDirection:
+    position: tuple[int, int]
+    direction: Direction
+
+@dataclass
+class TraversalState:
+    positions: tuple[PositionWithDirection, PositionWithDirection]
+    seen: Counter[tuple[int, int]]
+
+    @classmethod
+    def build_from_start(cls, start_pos: tuple[int, int], start_pipe: Pipe) -> 'TraversalState':
+        match start_pipe:
+            case Pipe.vertical:
+                a = PositionWithDirection((start_pos[0], start_pos[1] - 1), Direction.top)
+                b = PositionWithDirection((start_pos[0], start_pos[1] + 1), Direction.bottom)
+            case Pipe.horizontal:
+                a = PositionWithDirection((start_pos[0] - 1, start_pos[1]), Direction.left)
+                b = PositionWithDirection((start_pos[0] + 1, start_pos[1]), Direction.right)
+            case Pipe.bend_l:
+                a = PositionWithDirection((start_pos[0], start_pos[1] - 1), Direction.top)
+                b = PositionWithDirection((start_pos[0] + 1, start_pos[1]), Direction.right)
+            case Pipe.bend_j:
+                a = PositionWithDirection((start_pos[0], start_pos[1] - 1), Direction.top)
+                b = PositionWithDirection((start_pos[0] - 1, start_pos[1]), Direction.left)
+            case Pipe.bend_7:
+                a = PositionWithDirection((start_pos[0], start_pos[1] + 1), Direction.bottom)
+                b = PositionWithDirection((start_pos[0] - 1, start_pos[1]), Direction.left)
+            case Pipe.bend_f:
+                a = PositionWithDirection((start_pos[0], start_pos[1] + 1), Direction.bottom)
+                b = PositionWithDirection((start_pos[0] + 1, start_pos[1]), Direction.right)
+            case _:
+                raise ValueError(f'Cannot build traversal state from {start_pos} and {start_pipe}')
+        seen = Counter([start_pos, a.position, b.position])
+        return cls((a, b), seen)
+
+    def next(self, grid: Grid) -> 'TraversalState':
+        next_positions = []
+        seen = self.seen
+        for position in self.positions:
+            next_position = self.next_position(position, grid)
+            next_positions.append(next_position)
+            seen[next_position.position] += 1
+        return TraversalState(tuple(next_positions), self.seen)
+    
+    def has_looped(self) -> bool:
+        return any(count > 1 for count in self.seen.values())
+    
+    def n_steps(self) -> int:
+        return (sum(self.seen.values()) - 1) / 2
+    
+    def next_position(self, position: PositionWithDirection, grid: Grid) -> PositionWithDirection:
+        x, y = position.position
+        pipe = grid.tiles[y][x]
+        new_direction = [connector for connector in pipe.connectors() if connector != position.direction.opposite()][0]
+        match new_direction:
+            case Direction.top:
+                next_position = (x, y - 1)
+            case Direction.right:
+                next_position = (x + 1, y)
+            case Direction.bottom:
+                next_position = (x, y + 1)
+            case Direction.left:
+                next_position = (x - 1, y)
+            case _:
+                raise ValueError(f'Cannot get next position from {position}')
+        return PositionWithDirection(next_position, new_direction)
