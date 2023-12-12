@@ -87,6 +87,11 @@ fn dispatch(
                 "b" => y2023::d8::b::run_b(contents),
                 _ => panic!("Invalid part: {}", part),
             },
+            "10" => match part {
+                "a" => y2023::d10::a::run_a(contents),
+                "b" => y2023::d10::b::run_b(contents),
+                _ => panic!("Invalid part: {}", part),
+            },
             "9" => match part {
                 "a" => y2023::d9::a::run_a(contents),
                 "b" => y2023::d9::b::run_b(contents),

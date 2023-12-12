@@ -8,6 +8,13 @@ class Instruction(StrEnum):
 
 
 @dataclass
+class RepeatInterval:
+    node: str
+    first_idx: int
+    repeat_length: int
+    ending_node_idxs: list[int]
+
+@dataclass
 class Node:
     name: str
     left: str
@@ -35,6 +42,26 @@ class Game:
         nodes = {node.name: node for node in node_list}
         return cls(instructions, nodes, end_node_type=end_node_type)
     
+    def find_repeat_interval(self, node: str) -> RepeatInterval:
+        # Play until we wind up back at the same node AND the same instruction index.
+        state = GameState(node, 0)
+        visited: dict[str, int] = {}
+        ending_node_idxs = []
+        while state.node not in visited:
+            print(state.node)
+            visited[state.node] = state.instr_idx
+            instruction = self.instructions[state.instr_idx % len(self.instructions)]
+            if self.at_end(state.node):
+                ending_node_idxs.append(state.instr_idx)
+            match instruction:
+                case Instruction.R:
+                    state = GameState(self.nodes[state.node].right, state.instr_idx + 1)
+                case Instruction.L:
+                    state = GameState(self.nodes[state.node].left, state.instr_idx + 1)
+            print(state.node)
+        # Update the ending node indexes to be relative to the start of the loop.
+        ending_node_idxs = [idx - visited[state.node] for idx in ending_node_idxs]
+        return RepeatInterval(state.node, visited[state.node], state.instr_idx - visited[state.node], ending_node_idxs)
 
     def play(self) -> int:
         return self.distance_to_end("AAA")
