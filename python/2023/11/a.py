@@ -2,6 +2,7 @@ from .universe import Universe
 
 
 def a(input: str) -> str:
-    print(input)
     universe = Universe.build_from_str(input)
-    print(universe)
+    universe = universe.expand()
+    total_sum = universe.sum_of_all_distances()
+    return str(total_sum)
