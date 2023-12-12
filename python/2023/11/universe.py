@@ -13,12 +13,12 @@ class Point(NamedTuple):
 class Universe:
     galaxies: list[Point]
 
-    def expand(self) -> 'Universe':
-        expanded_x = self.expand_x()
-        expanded_all = expanded_x.expand_y()
+    def expand(self, factor: int = 2) -> 'Universe':
+        expanded_x = self.expand_x(factor)
+        expanded_all = expanded_x.expand_y(factor)
         return expanded_all
     
-    def expand_x(self) -> 'Universe':
+    def expand_x(self, factor: int) -> 'Universe':
         # Find empty columns.
         x_values = set(point.x for point in self.galaxies)
         n_cols = max(x_values) + 1
@@ -27,10 +27,11 @@ class Universe:
         for point in self.galaxies:
             # How many empty columns are there to the left of this point?
             adjust_factor = len([col for col in empty_cols if col < point.x])
+            adjust_factor *= (factor - 1)
             new_points.append(Point(point.x + adjust_factor, point.y))
         return Universe(new_points)
 
-    def expand_y(self) -> 'Universe':
+    def expand_y(self, factor: int) -> 'Universe':
         # Find empty rows.
         y_values = set(point.y for point in self.galaxies)
         n_rows = max(y_values) + 1
@@ -39,6 +40,7 @@ class Universe:
         for point in self.galaxies:
             # How many empty rows are there above this point?
             adjust_factor = len([row for row in empty_rows if row < point.y])
+            adjust_factor *= (factor - 1)
             new_points.append(Point(point.x, point.y + adjust_factor))
         return Universe(new_points)
     
