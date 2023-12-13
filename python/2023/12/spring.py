@@ -1,3 +1,4 @@
+from itertools import repeat, chain
 from enum import StrEnum
 from dataclasses import dataclass
 from typing import Self
@@ -53,6 +54,15 @@ class SpringArrangementReading:
     def __str__(self) -> str:
         return f'{"".join([str(s) for s in self.springs])} {",".join([str(c) for c in self.damaged_counts])}'
     
+    def unfold(self, factor: int) -> Self:
+        springs = []
+        for i in range(factor):
+            if i > 0:
+                springs.append(SpringStateReading.Unknown)
+            springs.extend(self.springs)
+        damaged_counts = list(chain(factor * self.damaged_counts))
+        return SpringArrangementReading(springs, damaged_counts)
+    
     def all_arrangements(self) -> list[SpringArrangement]:
         try:
             first_unknown = self.springs.index(SpringStateReading.Unknown)
@@ -73,5 +83,6 @@ class SpringArrangementReading:
             return arrangements
     
     def arrangement_count(self) -> int:
+        print('arrangement_count')
         return len(self.all_arrangements())
             
