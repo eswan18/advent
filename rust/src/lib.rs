@@ -87,14 +87,29 @@ fn dispatch(
                 "b" => y2023::d8::b::run_b(contents),
                 _ => panic!("Invalid part: {}", part),
             },
+            "9" => match part {
+                "a" => y2023::d9::a::run_a(contents),
+                "b" => y2023::d9::b::run_b(contents),
+                _ => panic!("Invalid part: {}", part),
+            },
             "10" => match part {
                 "a" => y2023::d10::a::run_a(contents),
                 "b" => y2023::d10::b::run_b(contents),
                 _ => panic!("Invalid part: {}", part),
             },
-            "9" => match part {
-                "a" => y2023::d9::a::run_a(contents),
-                "b" => y2023::d9::b::run_b(contents),
+            "11" => match part {
+                "a" => y2023::d11::a::run_a(contents),
+                "b" => y2023::d11::b::run_b(contents),
+                _ => panic!("Invalid part: {}", part),
+            },
+            "12" => match part {
+                "a" => y2023::d12::a::run_a(contents),
+                "b" => y2023::d12::b::run_b(contents),
+                _ => panic!("Invalid part: {}", part),
+            },
+            "13" => match part {
+                "a" => y2023::d13::a::run_a(contents),
+                "b" => y2023::d13::b::run_b(contents),
                 _ => panic!("Invalid part: {}", part),
             },
             _ => panic!("Invalid day: {}", day),

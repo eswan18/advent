@@ -79,13 +79,13 @@ impl<'a> Shape<'a> {
                             }
                         }
                     }
-                    _ => {}
                 }
             }
         }
         intersection_count
     }
 
+    #[allow(dead_code)]
     pub fn to_str_w_labeled_points(&self, points: HashSet<Position>) -> String {
         let grid = self.grid;
         let n_rows = grid.n_rows();

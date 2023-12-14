@@ -73,6 +73,7 @@ impl Pipe {
         Ok(pipe)
     }
 
+    #[allow(dead_code)]
     pub fn chars() -> Vec<char> {
         return vec!['|', '-', 'L', 'J', '7', 'F'];
     }
