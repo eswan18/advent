@@ -31,7 +31,6 @@ func main() {
 }
 
 func run(cmd *cobra.Command, args []string, test bool, inputFilename string) {
-
 	yearStr, dayStr, part := args[0], args[1], args[2]
 
 	// Coerce year and day to integers
