@@ -167,12 +167,17 @@ class BeamGrid:
     origin: Beam
     grid: Grid
     active: list[Beam] = field(default_factory=list)
+    seen: set[None | tuple[int, int], None | tuple[int, int]] = field(default_factory=set)
 
     def next(self) -> None:
         new_active = []
         for beam in self.active:
             next = beam.add_next_children(self.grid)
-            new_active.extend(next)
+            for next_beam in next:
+                # Keep track of what parent -> child pairs we've seen, and only bother adding new ones.
+                if (beam.at, next_beam.at) not in self.seen:
+                    new_active.append(next_beam)
+                    self.seen.add((beam.at, next_beam.at))
         self.active = new_active
 
     def __post_init__(self) -> None:
@@ -187,33 +192,3 @@ class BeamGrid:
     
     def energized_count(self) -> int:
         return len(set(self.origin.all_points()))
-    
-    def cull(self):
-        self.cull_active_duplicates()
-        # Todo: cull loops
-    
-    def cull_active_duplicates(self):
-        new_active = []
-        # Keep track of active positions and their parents.
-        # If two active positions exist with the same parent, we can make one inactive.
-        seen: set[(int, int), (int, int) | None] = set()
-        for beam in self.active:
-            parent_at = beam.parent.at if beam.parent else None
-            if (beam.at, parent_at) in seen:
-                # This position has already been seen with this parent.
-                continue
-            seen.add((beam.at, parent_at))
-            new_active.append(beam)
-        self.active = new_active
-
-    def cull_loop(self):
-        new_active = []
-        # Keep track of positions and their parents. If this pair has *ever* occurred
-        # before in any path, we can inactivate it.
-        seen: set[(int, int), (int, int) | None] = set()
-        for beam in self.active:
-            if beam.at in seen:
-                continue
-            seen.add(beam.at)
-            new_active.append(beam)
-        self.active = new_active
