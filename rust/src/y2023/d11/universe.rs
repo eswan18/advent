@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc, fmt::Display};
+use std::fmt::Display;
 
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
 struct Point {
