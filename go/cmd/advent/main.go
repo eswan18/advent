@@ -5,16 +5,34 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/spf13/cobra"
 )
 
 func main() {
-	if len(os.Args) != 4 {
-		fmt.Println("Usage: go run ./cmd/advent/main.go <year> <day> <a/b>")
+	var test bool
+	var inputFilename string
+
+	cmd := &cobra.Command{
+		Use:   "advent [year] [day] [a/b]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Run advent of code problems",
+		Run: func(cmd *cobra.Command, args []string) {
+			run(cmd, args, test, inputFilename)
+		},
+	}
+	cmd.Flags().BoolVar(&test, "test", false, "Run in test mode")
+	cmd.Flags().StringVar(&inputFilename, "file", "", "A custom input data file to use")
+
+	if err := cmd.Execute(); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
+}
 
-	// os.Args[0] is the program name, so arguments start from os.Args[1]
-	yearStr, dayStr, part := os.Args[1], os.Args[2], os.Args[3]
+func run(cmd *cobra.Command, args []string, test bool, inputFilename string) {
+
+	yearStr, dayStr, part := args[0], args[1], args[2]
 
 	// Coerce year and day to integers
 	year, err := strconv.Atoi(yearStr)
@@ -42,11 +60,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	contents, err := contentsFor(year, day, part)
+	filename := buildInputFilename(test, inputFilename, year, day, part)
+	contentsBytes, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Println("Error reading input:", err)
 		os.Exit(1)
 	}
+	contents := string(contentsBytes)
 
 	var result string
 	switch year {
@@ -73,12 +93,14 @@ func run2023(day int, part, contents string) (string, error) {
 	return "", fmt.Errorf("Invalid day/part combination: %d, %s", day, part)
 }
 
-func contentsFor(year, day int, part string) (string, error) {
-	filename := fmt.Sprintf("../inputs/%d/%d/%s/input.txt", year, day, part)
-	// Read and return the file's contents as a string
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return "", err
+func buildInputFilename(test bool, inputFilename string, year, day int, part string) string {
+	path := fmt.Sprintf("../inputs/%d/%d/%s/", year, day, part)
+	filename := "input.txt"
+	if test {
+		filename = "test_input.txt"
 	}
-	return string(content), nil
+	if inputFilename != "" {
+		filename = inputFilename
+	}
+	return path + filename
 }
