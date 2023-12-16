@@ -19,6 +19,7 @@ class Splitter:
 @dataclass
 class Beam:
     at: tuple[int, int]
+    parent_origin: tuple[int, int] | None = None
     parent: 'Beam | None' = None
     next: list['Beam'] = field(default_factory=list)
 
@@ -28,8 +29,9 @@ class Beam:
         return child
     
     def next_positions(self, grid: 'Grid') -> list[tuple[int, int]]:
-        # The first position doesn't have a parent but always comes from the left into (0, 0), so we hardcode that parent.
-        parent = self.parent or Beam(at=(-1, 0))
+        # The first position doesn't have a parent so we need to fall back to the "parent
+        # origin" - the place off edge where the beam "started".
+        parent = self.parent if self.parent is not None else Beam(self.parent_origin)
         # Figure out which direction we're coming from.
         d_x, d_y = self.at[0] - parent.at[0], self.at[1] - parent.at[1]
         next = []
