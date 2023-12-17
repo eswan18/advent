@@ -6,8 +6,7 @@ def a(input: str) -> str:
     grid = Grid.from_str(input)
     traversal = Traversal(
         start=Position(0, 0),
-        #end=Position(grid.width - 1, grid.height - 1),
-        end=Position(4, 1),
+        end=Position(grid.width - 1, grid.height - 1),
         grid=grid,
     )
     distance = traversal.find_path()

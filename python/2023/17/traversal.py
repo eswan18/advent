@@ -38,7 +38,7 @@ class Traversal:
     # This is used as a heap, so we can always pull the smallest element.
     next_moves: list[Move] = field(init=False)
     # This is a way to keep track of positions we've seen before, so we don't come back unless we find a shorter path.
-    seen: set[Position] = field(init=False)
+    seen: set[tuple, Position, tuple[Direction | None, Direction | None, Direction | None]] = field(init=False)
 
     def __post_init__(self):
         self.next_moves = []
@@ -66,10 +66,10 @@ class Traversal:
     def _iterate(self) -> Move | None:
         # Grab the closest position we've seen so far.
         next_move = heappop(self.next_moves)
-        if next_move.to in self.seen:
+        if (next_move.to, next_move.recent_directions) in self.seen:
             return None
         # Add it to the seen list.
-        self.seen.add(next_move.to)
+        self.seen.add((next_move.to, next_move.recent_directions))
         # We can't go backward, so determine what that direction is.
         cant_go = {next_move.recent_directions[-1].opposite()}
         # If this move has now led us to go three times in the same direction, we also
@@ -96,9 +96,6 @@ class Traversal:
                     continue
                 case move:
                     if move.to == self.end:
-                        print(move)
-                        print('-' * 20)
-                        print(self.move_history_str(move))
                         return move.distance
     
     def move_history_str(self, move: Move) -> str:
