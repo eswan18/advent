@@ -59,8 +59,18 @@ class Path:
     def calculate_area(self) -> int:
         perimeter = self._calculate_perimeter()
         interior = self._calculate_interior_area()
-        # Half the perimeter is actually "within" the path.
-        # Why add the 1? No idea, it just works.
+        # About half the perimeter is actually "within" the path, so we need to add the
+        # other part back in to account for the full bounded area.
+        #
+        # Why "about half"? Because the outer part of the perimeter (the part that we
+        # didn't include in the interior) is actually longer than the inside by 2.
+        # Explaining this is hard but it's easier to realize if you think about a
+        # rectangle whose border is 2d squares. The edges have equal length on both
+        # sides, but the corners don't: they have one quarter on the inside and 3 on the
+        # outside, making each one bigger on the outside by 0.5. 4 corners * 0.5 = 2.
+        #
+        # So the interior includes slightly less than half the perimeter: perim / 2 - 1
+        # That means we're missing the other part of the perimiter: perim / 2 + 1
         return int(interior + perimeter // 2 + 1)
      
     def _calculate_perimeter(self) -> int:

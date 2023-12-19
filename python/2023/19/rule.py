@@ -81,3 +81,6 @@ class Ruleset:
                 return False
             else:
                 current_rule = self.rules[next_rule]
+    
+    def all_tests(self) -> list[Test]:
+        return [test for rule in self.rules.values() for test in rule.tests]
