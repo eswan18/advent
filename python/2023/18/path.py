@@ -74,7 +74,6 @@ class Path:
         if self.segments[0].start != self.segments[-1].end:
             raise ValueError("Path is not closed")
         # The "shoelace formula"
-        # https://en.wikipedia.org/wiki/Shoelace_formula
         area = 0    
         for i in range(len(self.segments) - 1):
             area += self.segments[i].start.x * self.segments[i + 1].start.y
