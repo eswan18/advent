@@ -1,9 +1,9 @@
 #[derive(Debug)]
 pub struct Part {
-    x: u64,
-    m: u64,
-    a: u64,
-    s: u64,
+    pub x: u64,
+    pub m: u64,
+    pub a: u64,
+    pub s: u64,
 }
 
 impl Part {
@@ -36,7 +36,7 @@ impl Part {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum Field {
     X,
     M,
@@ -53,5 +53,22 @@ impl Field {
             "s" => Ok(Field::S),
             _ => Err("Invalid field".into()),
         }
+    }
+
+    pub fn all() -> Vec<Field> {
+        vec![Field::X, Field::M, Field::A, Field::S]
+    }
+}
+
+// An inclusive range.
+#[derive(Debug, PartialEq)]
+pub struct Range {
+    pub start: u64,
+    pub end: u64,
+}
+
+impl Range {
+    pub fn len(&self) -> u64 {
+        self.end - self.start + 1
     }
 }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::y2023::d19::part::{Field, Part};
+use crate::y2023::d19::part::{Field, Part, Range};
 
 
 type Rulename = String;
@@ -145,5 +145,56 @@ impl Ruleset {
                 Destination::Reject => return Ok(false),
             }
         }
+    }
+
+    fn all_tests(&self) -> Vec<&Test> {
+        let mut tests = Vec::new();
+        for rule in self.rules.values() {
+            tests.extend(rule.tests.iter());
+        }
+        tests
+    }
+
+    // All the ranges that resolve to the same answer.
+    pub fn ranges(&self) -> HashMap::<Field, Vec<Range>> {
+        let mut ranges: HashMap::<Field, Vec<Range>> = HashMap::new();
+        let all_tests = self.all_tests();
+        for field in Field::all() {
+            let mut field_ranges: Vec<Range> = Vec::new();
+            // Get all tests for this field.
+            let mut tests: Vec<&&Test> = all_tests.iter().filter(|t| t.field == field).collect();
+            // Sort them by threshold, then by whether they're greater than or less than.
+            tests.sort_by(|a, b| {
+                let cmp = a.threshold.cmp(&b.threshold);
+                if cmp == std::cmp::Ordering::Equal {
+                    a.is_gt.cmp(&b.is_gt)
+                } else {
+                    cmp
+                }
+            });
+            for t in tests {
+                // Start at 1, or 1 after the last range's end.
+                let start = match field_ranges.last() {
+                    Some(r) => r.end + 1,
+                    None => 1,
+                };
+                // End at the threshold. Account for differences in whether the threshold is inclusive.
+                let end = match t.is_gt {
+                    true => t.threshold,
+                    false => t.threshold - 1,
+                };
+                if end < start {
+                    continue;
+                }
+                field_ranges.push(Range { start, end });
+            }
+            // Add one final range to get us to 4000.
+            let last_range = field_ranges.last().unwrap();
+            if last_range.end < 4000 {
+                field_ranges.push(Range { start: last_range.end + 1, end: 4000 });
+            }
+            ranges.insert(field, field_ranges);
+        }
+        ranges
     }
 }
