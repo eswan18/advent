@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Point {
     pub x: i32,
     pub y: i32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PointWithDirection {
     pub point: Point,
     pub direction: Direction,
@@ -16,26 +16,26 @@ impl Point {
     fn to(&self, direction: &Direction) -> Point {
         match direction {
             Direction::Up => Point {
-                x: self.x - 1,
-                y: self.y,
-            },
-            Direction::Down => Point {
-                x: self.x + 1,
-                y: self.y,
-            },
-            Direction::Left => Point {
                 x: self.x,
                 y: self.y - 1,
             },
-            Direction::Right => Point {
+            Direction::Down => Point {
                 x: self.x,
                 y: self.y + 1,
+            },
+            Direction::Left => Point {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Direction::Right => Point {
+                x: self.x + 1,
+                y: self.y,
             },
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Direction {
     Up,
     Down,
@@ -73,11 +73,26 @@ impl Contraption {
     }
 
     pub fn at(&self, point: &Point) -> Option<&Space> {
-        self.spaces.get(point.x as usize)?.get(point.y as usize)
+        self.spaces.get(point.y as usize)?.get(point.x as usize)
     }
 
     pub fn dimensions(&self) -> (usize, usize) {
         (self.width, self.height)
+    }
+
+    pub fn display_at(&self, at: &Point) -> char {
+        let space = self.at(at).unwrap();
+        match space {
+            Space::Empty => '.',
+            Space::Mirror(mirror) => match mirror {
+                Mirror::Slash => '/',
+                Mirror::Backslash => '\\',
+            },
+            Space::Splitter(splitter) => match splitter {
+                Splitter::Horizontal => '-',
+                Splitter::Vertical => '|',
+            },
+        }
     }
 }
 

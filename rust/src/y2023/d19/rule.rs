@@ -22,7 +22,7 @@ pub struct Test {
 impl Test {
     pub fn new_from_str(s: &str) -> Result<Test, Box<dyn std::error::Error>> {
         // Input strings look like "s<1351:px". "px" is the destination, 1351 is the threshold, and "s" is the field.
-        let mut parts = s.split(":").collect::<Vec<&str>>();
+        let parts = s.split(":").collect::<Vec<&str>>();
         if parts.len() != 2 {
             return Err("Not enough parts".into());
         }
