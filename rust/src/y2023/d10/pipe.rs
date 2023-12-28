@@ -1,6 +1,6 @@
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::slice::Iter;
-use std::collections::HashSet;
 
 #[derive(PartialEq, Eq, Debug, Hash, Clone, Copy)]
 pub enum Direction {
@@ -20,7 +20,6 @@ impl Direction {
         }
     }
 }
-
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum Pipe {
@@ -45,7 +44,9 @@ impl Pipe {
         PIPES.iter()
     }
 
-    pub fn new_from_connections(connections: HashSet<&Direction>) -> Result<Pipe, Box<dyn std::error::Error>> {
+    pub fn new_from_connections(
+        connections: HashSet<&Direction>,
+    ) -> Result<Pipe, Box<dyn std::error::Error>> {
         if connections.len() != 2 {
             return Err(format!("Invalid number of connections: {}", connections.len()).into());
         }

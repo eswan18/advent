@@ -112,7 +112,10 @@ impl Pattern {
         None
     }
 
-    pub fn find_reflect_score(&self, mismatches: usize) -> Result<usize, Box<dyn std::error::Error>> {
+    pub fn find_reflect_score(
+        &self,
+        mismatches: usize,
+    ) -> Result<usize, Box<dyn std::error::Error>> {
         let vert_score = self.find_vertical_symmetry(mismatches);
         if let Some(vert_score) = vert_score {
             return Ok((vert_score + 1) * 100);

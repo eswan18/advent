@@ -8,7 +8,10 @@ pub enum SeedSet {
 impl SeedSet {
     pub fn new_from_line(line: &str, seeds_type: SeedsType) -> Self {
         let value_str = line.split(": ").collect::<Vec<&str>>()[1];
-        let values = value_str.split(' ').map(|s| s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
+        let values = value_str
+            .split(' ')
+            .map(|s| s.parse::<i64>().unwrap())
+            .collect::<Vec<i64>>();
         return match seeds_type {
             SeedsType::List => Self::List(values),
             SeedsType::RangeList => {
@@ -21,7 +24,7 @@ impl SeedSet {
                 }
                 Self::RangeList(ranges)
             }
-        }
+        };
     }
 
     pub fn contains(&self, value: i64) -> bool {
@@ -39,4 +42,7 @@ impl SeedSet {
     }
 }
 
-pub enum SeedsType { List, RangeList }
+pub enum SeedsType {
+    List,
+    RangeList,
+}

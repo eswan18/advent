@@ -45,7 +45,10 @@ impl Universe {
     }
 
     pub fn pair_distances(&self) -> Vec<usize> {
-        self.pairs().iter().map(|(a, b)| a.manhattan_distance(b)).collect()
+        self.pairs()
+            .iter()
+            .map(|(a, b)| a.manhattan_distance(b))
+            .collect()
     }
 
     pub fn expand(&self, factor: usize) -> Universe {
@@ -69,7 +72,9 @@ impl Universe {
                 y: point.y,
             });
         }
-        Universe{galaxies: new_points}
+        Universe {
+            galaxies: new_points,
+        }
     }
 
     fn expand_y(&self, factor: usize) -> Universe {
@@ -89,7 +94,9 @@ impl Universe {
                 y: point.y + expand_factor,
             });
         }
-        Universe{galaxies: new_points}
+        Universe {
+            galaxies: new_points,
+        }
     }
 }
 

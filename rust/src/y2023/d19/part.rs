@@ -18,19 +18,26 @@ impl Part {
 
     pub fn new_from_line(s: &str) -> Result<Part, Box<dyn std::error::Error>> {
         // Input lines look like "{x=787,m=2655,a=1222,s=2876}"
-        let s = s.strip_prefix("{").ok_or("No opening brace")?.strip_suffix("}").ok_or("No closing brace")?;
+        let s = s
+            .strip_prefix("{")
+            .ok_or("No opening brace")?
+            .strip_suffix("}")
+            .ok_or("No closing brace")?;
         let parts = s.split(",").collect::<Vec<&str>>();
         if parts.len() != 4 {
             return Err("Not enough parts".into());
         }
-        let values = parts.iter().map(|s| s.split("=").collect::<Vec<&str>>()[1]).collect::<Vec<&str>>();
+        let values = parts
+            .iter()
+            .map(|s| s.split("=").collect::<Vec<&str>>()[1])
+            .collect::<Vec<&str>>();
         let x = values[0].parse::<u64>()?;
         let m = values[1].parse::<u64>()?;
         let a = values[2].parse::<u64>()?;
         let s = values[3].parse::<u64>()?;
         Ok(Part { x, m, a, s })
     }
-    
+
     pub fn total(&self) -> u64 {
         self.x + self.m + self.a + self.s
     }

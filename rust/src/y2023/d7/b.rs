@@ -1,7 +1,10 @@
 use super::hand::Hand;
 
 pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let hands = contents.lines().map(|line| Hand::new_from_line(line, true)).collect::<Result<Vec<Hand>, _>>()?;
+    let hands = contents
+        .lines()
+        .map(|line| Hand::new_from_line(line, true))
+        .collect::<Result<Vec<Hand>, _>>()?;
     // sort the hands with a custom sorting function
     let mut hands = hands;
     hands.sort_by(|a, b| {

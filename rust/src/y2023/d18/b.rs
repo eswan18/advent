@@ -1,5 +1,5 @@
+use crate::y2023::d18::instruction::{Instruction, InstructionMode};
 use crate::y2023::d18::path::Path;
-use crate::y2023::d18::instruction::{InstructionMode, Instruction};
 
 pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
     let instructions = contents

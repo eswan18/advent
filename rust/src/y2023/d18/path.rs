@@ -1,5 +1,4 @@
-use crate::y2023::d18::instruction::{Instruction, Direction};
-
+use crate::y2023::d18::instruction::{Direction, Instruction};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 struct Point {
@@ -13,10 +12,9 @@ struct Segment {
     end: Point,
 }
 
-
 #[derive(Debug)]
 pub struct Path {
-    segments: Vec<Segment>,    
+    segments: Vec<Segment>,
 }
 
 impl Path {
@@ -27,12 +25,28 @@ impl Path {
     }
 
     pub fn execute(&mut self, instruction: Instruction) {
-        let start = self.segments.last().map(|s| s.end.clone()).unwrap_or(Point { x: 0, y: 0 });
+        let start = self
+            .segments
+            .last()
+            .map(|s| s.end.clone())
+            .unwrap_or(Point { x: 0, y: 0 });
         let end = match instruction.direction {
-            Direction::Up => Point { x: start.x, y: start.y - instruction.distance as i32 },
-            Direction::Down => Point { x: start.x, y: start.y + instruction.distance as i32 },
-            Direction::Left => Point { x: start.x - instruction.distance as i32, y: start.y },
-            Direction::Right => Point { x: start.x + instruction.distance as i32, y: start.y },
+            Direction::Up => Point {
+                x: start.x,
+                y: start.y - instruction.distance as i32,
+            },
+            Direction::Down => Point {
+                x: start.x,
+                y: start.y + instruction.distance as i32,
+            },
+            Direction::Left => Point {
+                x: start.x - instruction.distance as i32,
+                y: start.y,
+            },
+            Direction::Right => Point {
+                x: start.x + instruction.distance as i32,
+                y: start.y,
+            },
         };
         self.segments.push(Segment { start, end });
     }

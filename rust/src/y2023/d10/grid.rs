@@ -1,4 +1,4 @@
-use std::{fmt::Display, collections::HashSet};
+use std::{collections::HashSet, fmt::Display};
 
 use crate::y2023::d10::pipe::{Direction, Pipe};
 use crate::y2023::d10::position::Position;
@@ -50,38 +50,45 @@ impl Grid {
         Ok(Grid { tiles, start })
     }
 
-    fn impute_start_pipe(tiles: Vec<Vec<Tile>>, start: Position) -> Result<Vec<Vec<Tile>>, Box<dyn std::error::Error>> {
+    fn impute_start_pipe(
+        tiles: Vec<Vec<Tile>>,
+        start: Position,
+    ) -> Result<Vec<Vec<Tile>>, Box<dyn std::error::Error>> {
         let mut tiles = tiles;
         let mut connections = HashSet::new();
         let n_rows = tiles.len();
         let n_cols = tiles[0].len();
         let Position { x, y } = start;
         // Look at the tiles around this position and figure out which pipe belongs here.
-        let connects_left = x > 0 && match &tiles[y][x - 1] {
-            Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Right),
-            Tile::Empty => false,
-        };
+        let connects_left = x > 0
+            && match &tiles[y][x - 1] {
+                Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Right),
+                Tile::Empty => false,
+            };
         if connects_left {
             connections.insert(&Direction::Left);
         }
-        let connects_right = x < (n_cols - 1) && match &tiles[y][x + 1] {
-            Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Left),
-            Tile::Empty => false,
-        };
+        let connects_right = x < (n_cols - 1)
+            && match &tiles[y][x + 1] {
+                Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Left),
+                Tile::Empty => false,
+            };
         if connects_right {
             connections.insert(&Direction::Right);
         }
-        let connects_up = y > 0 && match &tiles[start.y - 1][start.x] {
-            Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Down),
-            Tile::Empty => false,
-        };
+        let connects_up = y > 0
+            && match &tiles[start.y - 1][start.x] {
+                Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Down),
+                Tile::Empty => false,
+            };
         if connects_up {
             connections.insert(&Direction::Up);
         }
-        let connects_down = y < (n_rows - 1) && match &tiles[start.y + 1][start.x] {
-            Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Up),
-            Tile::Empty => false,
-        };
+        let connects_down = y < (n_rows - 1)
+            && match &tiles[start.y + 1][start.x] {
+                Tile::Pipe(pipe) => pipe.connections().contains(&Direction::Up),
+                Tile::Empty => false,
+            };
         if connects_down {
             connections.insert(&Direction::Down);
         }

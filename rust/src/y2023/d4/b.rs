@@ -7,7 +7,10 @@ struct CardAndCopies<'a> {
 
 pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
     let cards = Card::new_from_input(contents)?;
-    let mut cards_and_copies: Vec<CardAndCopies> = cards.iter().map(|card| CardAndCopies{card, copies: 1}).collect();
+    let mut cards_and_copies: Vec<CardAndCopies> = cards
+        .iter()
+        .map(|card| CardAndCopies { card, copies: 1 })
+        .collect();
     let mut processed_count = 0;
     while cards_and_copies.len() > 0 {
         // Pop off the first item.

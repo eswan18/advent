@@ -17,9 +17,19 @@ impl Race {
         }
         let time_strs: &str = lines[0].split(":").map(|s| s.trim()).last().unwrap();
         let distance_strs: &str = lines[1].split(":").map(|s| s.trim()).last().unwrap();
-        let times: Vec<u64> = time_strs.split(' ').filter(|s| !s.is_empty()).map(|s| s.parse::<u64>().unwrap()).collect();
-        let distances: Vec<u64> = distance_strs.split(' ').filter(|s| !s.is_empty()).map(|s| s.parse::<u64>().unwrap()).collect();
-        zip(times, distances).map(|(t, d)| Self::new(t, d)).collect()
+        let times: Vec<u64> = time_strs
+            .split(' ')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.parse::<u64>().unwrap())
+            .collect();
+        let distances: Vec<u64> = distance_strs
+            .split(' ')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.parse::<u64>().unwrap())
+            .collect();
+        zip(times, distances)
+            .map(|(t, d)| Self::new(t, d))
+            .collect()
     }
 
     pub fn new_from_lines(lines: Lines) -> Self {
@@ -27,8 +37,18 @@ impl Race {
         if lines.len() != 2 {
             panic!("Invalid input: expected 2 lines");
         }
-        let time_str = lines[0].split(":").map(|s| s.trim()).last().unwrap().replace(" ", "");
-        let distance_str = lines[1].split(":").map(|s| s.trim()).last().unwrap().replace(" ", "");
+        let time_str = lines[0]
+            .split(":")
+            .map(|s| s.trim())
+            .last()
+            .unwrap()
+            .replace(" ", "");
+        let distance_str = lines[1]
+            .split(":")
+            .map(|s| s.trim())
+            .last()
+            .unwrap()
+            .replace(" ", "");
         let time = time_str.parse::<u64>().unwrap();
         let distance = distance_str.parse::<u64>().unwrap();
         Self::new(time, distance)
@@ -48,7 +68,6 @@ impl Race {
                     break;
                 }
             }
-
         }
         ways
     }

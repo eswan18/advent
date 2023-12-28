@@ -1,9 +1,9 @@
-use std::fmt::Display;
 use std::collections::HashSet;
+use std::fmt::Display;
 
-use crate::y2023::d10::grid::{Tile, Grid};
+use crate::y2023::d10::grid::{Grid, Tile};
+use crate::y2023::d10::pipe::{Direction, Pipe};
 use crate::y2023::d10::position::Position;
-use crate::y2023::d10::pipe::{Pipe, Direction};
 
 pub struct Shape<'a> {
     grid: &'a Grid,
@@ -59,7 +59,7 @@ impl<'a> Shape<'a> {
             if let Some(Tile::Pipe(pipe)) = self.grid.at(position) {
                 match *pipe {
                     Pipe::Horizontal => intersection_count += 1,
-                    Pipe::Vertical => {},
+                    Pipe::Vertical => {}
                     bend @ (Pipe::Bend7 | Pipe::BendF | Pipe::BendJ | Pipe::BendL) => {
                         let direction = match bend {
                             Pipe::BendF | Pipe::BendL => Direction::Right,
@@ -69,7 +69,7 @@ impl<'a> Shape<'a> {
                         match last_seen_bend_direction {
                             None => {
                                 last_seen_bend_direction = Some(direction);
-                            },
+                            }
                             Some(last_seen_bend) => {
                                 // Only count cases where the two bends caused us to "cross over" this square.
                                 if last_seen_bend != direction {

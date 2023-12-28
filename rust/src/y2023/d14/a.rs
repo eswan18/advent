@@ -1,5 +1,4 @@
-use crate::y2023::d14::platform::{Platform, Direction};
-
+use crate::y2023::d14::platform::{Direction, Platform};
 
 pub fn run_a(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut platform = Platform::new_from_str(contents);

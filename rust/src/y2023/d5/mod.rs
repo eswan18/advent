@@ -1,6 +1,6 @@
 pub mod a;
 pub mod b;
-pub mod seeds;
-mod range;
-mod mapping;
 mod game;
+mod mapping;
+mod range;
+pub mod seeds;

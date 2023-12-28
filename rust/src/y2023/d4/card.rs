@@ -26,11 +26,16 @@ impl Card {
     }
 
     pub fn new_from_input(input: &str) -> Result<Vec<Card>, Box<dyn std::error::Error>> {
-        input.lines().map(|line| Card::new_from_line(line)).collect()
+        input
+            .lines()
+            .map(|line| Card::new_from_line(line))
+            .collect()
     }
 
     pub fn match_count(&self) -> usize {
-        self.winning_numbers.intersection(&self.your_numbers).count()
+        self.winning_numbers
+            .intersection(&self.your_numbers)
+            .count()
     }
 
     pub fn points(&self) -> usize {
@@ -42,5 +47,4 @@ impl Card {
         }
         0
     }
-
 }

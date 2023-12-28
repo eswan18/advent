@@ -15,10 +15,22 @@ pub struct PointWithDirection {
 impl Point {
     fn to(&self, direction: &Direction) -> Point {
         match direction {
-            Direction::Up => Point { x: self.x - 1, y: self.y },
-            Direction::Down => Point { x: self.x + 1, y: self.y },
-            Direction::Left => Point { x: self.x, y: self.y - 1 },
-            Direction::Right => Point { x: self.x, y: self.y + 1 },
+            Direction::Up => Point {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Direction::Down => Point {
+                x: self.x + 1,
+                y: self.y,
+            },
+            Direction::Left => Point {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Direction::Right => Point {
+                x: self.x,
+                y: self.y + 1,
+            },
         }
     }
 }
@@ -53,7 +65,11 @@ impl Contraption {
             spaces.push(row);
             height += 1;
         }
-        Ok(Self { spaces, width, height })
+        Ok(Self {
+            spaces,
+            width,
+            height,
+        })
     }
 
     pub fn at(&self, point: &Point) -> Option<&Space> {
@@ -109,11 +125,13 @@ impl Space {
 
     pub fn next_points(&self, at: &Point, direction: &Direction) -> Vec<PointWithDirection> {
         match self {
-            Self::Empty => vec![PointWithDirection{point: at.to(direction), direction: direction.clone()}],
+            Self::Empty => vec![PointWithDirection {
+                point: at.to(direction),
+                direction: direction.clone(),
+            }],
             Self::Mirror(mirror) => mirror.next_points(at, direction),
             Self::Splitter(splitter) => splitter.next_points(at, direction),
         }
-
     }
 }
 
@@ -147,7 +165,10 @@ impl Mirror {
                 Direction::Right => Direction::Down,
             },
         };
-        vec![PointWithDirection{point: at.to(&to), direction: to}]
+        vec![PointWithDirection {
+            point: at.to(&to),
+            direction: to,
+        }]
     }
 }
 
@@ -181,6 +202,12 @@ impl Splitter {
                 Direction::Right => vec![Direction::Up, Direction::Down],
             },
         };
-        to_directions.iter().map(|to| PointWithDirection{point: at.to(to), direction: to.clone()}).collect()
+        to_directions
+            .iter()
+            .map(|to| PointWithDirection {
+                point: at.to(to),
+                direction: to.clone(),
+            })
+            .collect()
     }
 }

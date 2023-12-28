@@ -1,7 +1,7 @@
-use std::rc::{Rc, Weak};
 use std::cell::RefCell;
+use std::rc::{Rc, Weak};
 
-use super::contraption::{Point, Direction, Contraption, PointWithDirection};
+use super::contraption::{Contraption, Direction, Point, PointWithDirection};
 
 pub struct Beam {
     at: PointWithDirection,
@@ -44,9 +44,9 @@ impl Beam {
             .into_iter()
             .filter(|point_with_direction| {
                 point_with_direction.point.x < width
-                && point_with_direction.point.y < height
-                && point_with_direction.point.x >= 0
-                && point_with_direction.point.y >= 0
+                    && point_with_direction.point.y < height
+                    && point_with_direction.point.x >= 0
+                    && point_with_direction.point.y >= 0
             })
             .collect::<Vec<_>>()
     }

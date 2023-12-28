@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::y2023::d19::part::{Field, Part, Range};
 
-
 type Rulename = String;
 
 #[derive(Debug, Clone)]
@@ -92,7 +91,10 @@ impl Rule {
         let name: Rulename = parts[0].to_string();
         let tests_etc = parts[1].strip_suffix("}").ok_or("No closing brace")?;
         let test_parts = tests_etc.split(",").collect::<Vec<&str>>();
-        let tests = test_parts[0..test_parts.len()-1].iter().map(|s| Test::new_from_str(s)).collect::<Result<Vec<Test>, Box<dyn std::error::Error>>>()?;
+        let tests = test_parts[0..test_parts.len() - 1]
+            .iter()
+            .map(|s| Test::new_from_str(s))
+            .collect::<Result<Vec<Test>, Box<dyn std::error::Error>>>()?;
         let fallback = match test_parts.last() {
             Some(&"A") => Destination::Accept,
             Some(&"R") => Destination::Reject,
@@ -117,7 +119,7 @@ impl Rule {
 }
 
 pub struct Ruleset {
-    rules: HashMap<Rulename, Rule>
+    rules: HashMap<Rulename, Rule>,
 }
 
 impl Ruleset {
@@ -128,9 +130,7 @@ impl Ruleset {
             let name = rule.name.clone();
             rules.insert(name, rule);
         }
-        Ok(Ruleset {
-            rules,
-        })
+        Ok(Ruleset { rules })
     }
 
     pub fn test(&self, part: &Part) -> Result<bool, Box<dyn std::error::Error>> {
@@ -140,7 +140,7 @@ impl Ruleset {
             match dest {
                 Destination::Rule(name) => {
                     rule = self.rules.get(&name).ok_or("no rule")?;
-                },
+                }
                 Destination::Accept => return Ok(true),
                 Destination::Reject => return Ok(false),
             }
@@ -156,8 +156,8 @@ impl Ruleset {
     }
 
     // All the ranges that resolve to the same answer.
-    pub fn ranges(&self) -> HashMap::<Field, Vec<Range>> {
-        let mut ranges: HashMap::<Field, Vec<Range>> = HashMap::new();
+    pub fn ranges(&self) -> HashMap<Field, Vec<Range>> {
+        let mut ranges: HashMap<Field, Vec<Range>> = HashMap::new();
         let all_tests = self.all_tests();
         for field in Field::all() {
             let mut field_ranges: Vec<Range> = Vec::new();
@@ -191,7 +191,10 @@ impl Ruleset {
             // Add one final range to get us to 4000.
             let last_range = field_ranges.last().unwrap();
             if last_range.end < 4000 {
-                field_ranges.push(Range { start: last_range.end + 1, end: 4000 });
+                field_ranges.push(Range {
+                    start: last_range.end + 1,
+                    end: 4000,
+                });
             }
             ranges.insert(field, field_ranges);
         }

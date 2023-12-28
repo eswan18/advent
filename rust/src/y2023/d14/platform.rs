@@ -1,4 +1,4 @@
-use std::{fmt::Display, collections::HashSet};
+use std::{collections::HashSet, fmt::Display};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Point {
@@ -9,19 +9,31 @@ pub struct Point {
 impl Point {
     pub fn to(&self, d: &Direction) -> Point {
         match d {
-            Direction::North => Point { x: self.x, y: self.y - 1 },
-            Direction::South => Point { x: self.x, y: self.y + 1 },
-            Direction::East => Point { x: self.x + 1, y: self.y },
-            Direction::West => Point { x: self.x - 1, y: self.y },
+            Direction::North => Point {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Direction::South => Point {
+                x: self.x,
+                y: self.y + 1,
+            },
+            Direction::East => Point {
+                x: self.x + 1,
+                y: self.y,
+            },
+            Direction::West => Point {
+                x: self.x - 1,
+                y: self.y,
+            },
         }
     }
 }
 
-pub enum Direction { 
+pub enum Direction {
     North,
     South,
     East,
-    West
+    West,
 }
 
 pub struct Platform {
@@ -42,8 +54,14 @@ impl Platform {
             for (x, c) in line.chars().enumerate() {
                 width = width.max(x);
                 match c {
-                    'O' => rounded_rocks.push(Point { x: x as i32, y: y as i32 }),
-                    '#' => cube_rocks.push(Point { x: x as i32, y: y as i32 }),
+                    'O' => rounded_rocks.push(Point {
+                        x: x as i32,
+                        y: y as i32,
+                    }),
+                    '#' => cube_rocks.push(Point {
+                        x: x as i32,
+                        y: y as i32,
+                    }),
                     _ => (),
                 }
             }
@@ -60,18 +78,10 @@ impl Platform {
         // For whatever direction we're rolling the rocks, we want to start with rocks that are already
         // closest to that direction (to clear space for the later ones).
         match d {
-            Direction::North => {
-                self.rounded_rocks.sort_by(|a, b| { a.y.cmp(&b.y) })
-            },
-            Direction::South => {
-                self.rounded_rocks.sort_by(|a, b| { b.y.cmp(&a.y) })
-            },
-            Direction::West => {
-                self.rounded_rocks.sort_by(|a, b| { a.x.cmp(&b.x) })
-            },
-            Direction::East => {
-                self.rounded_rocks.sort_by(|a, b| { b.x.cmp(&a.x) })
-            },
+            Direction::North => self.rounded_rocks.sort_by(|a, b| a.y.cmp(&b.y)),
+            Direction::South => self.rounded_rocks.sort_by(|a, b| b.y.cmp(&a.y)),
+            Direction::West => self.rounded_rocks.sort_by(|a, b| a.x.cmp(&b.x)),
+            Direction::East => self.rounded_rocks.sort_by(|a, b| b.x.cmp(&a.x)),
         };
         let mut new_rounded_rocks = self.rounded_rocks.clone();
         let mut occupied_positions = self.cube_rocks.iter().collect::<HashSet<_>>();
@@ -88,29 +98,42 @@ impl Platform {
         let mut p: Point = (*start).clone();
         loop {
             let maybe_next = p.to(d);
-            if occupied.contains(&maybe_next) { break }
+            if occupied.contains(&maybe_next) {
+                break;
+            }
             match d {
                 Direction::North => {
-                    if maybe_next.y < 0 { break }
-                },
+                    if maybe_next.y < 0 {
+                        break;
+                    }
+                }
                 Direction::South => {
-                    if maybe_next.y >= self.height as i32 { break }
-                },
+                    if maybe_next.y >= self.height as i32 {
+                        break;
+                    }
+                }
                 Direction::East => {
-                    if maybe_next.x >= self.width as i32 { break }
-                },
+                    if maybe_next.x >= self.width as i32 {
+                        break;
+                    }
+                }
                 Direction::West => {
-                    if maybe_next.x < 0 { break }
-                },
+                    if maybe_next.x < 0 {
+                        break;
+                    }
+                }
             }
             // If we got here without breaking out, the next point is valid.
             p = maybe_next;
         }
         p
     }
-    
+
     pub fn load(&self) -> usize {
-        self.rounded_rocks.iter().map(|rock| { self.height - rock.y as usize }).sum::<usize>()
+        self.rounded_rocks
+            .iter()
+            .map(|rock| self.height - rock.y as usize)
+            .sum::<usize>()
     }
 
     pub fn cycle(&mut self) {

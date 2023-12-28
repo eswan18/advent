@@ -50,7 +50,7 @@ impl Instruction {
                     direction,
                     distance,
                 })
-            },
+            }
             InstructionMode::Swapped => {
                 let code = parts.last()?;
                 let code = code.strip_prefix("(#")?.strip_suffix(")")?;
@@ -62,8 +62,7 @@ impl Instruction {
                     direction,
                     distance,
                 })
-            },
+            }
         }
-
     }
 }

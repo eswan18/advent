@@ -1,4 +1,4 @@
-use crate::y2023::d18::instruction::{InstructionMode, Instruction};
+use crate::y2023::d18::instruction::{Instruction, InstructionMode};
 use crate::y2023::d18::path::Path;
 
 pub fn run_a(contents: &str) -> Result<String, Box<dyn std::error::Error>> {

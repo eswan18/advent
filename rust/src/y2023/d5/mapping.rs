@@ -32,6 +32,9 @@ impl Mapping {
         let source_start = parts[1].parse::<i64>().unwrap();
         let delta = destination_start - source_start;
         let length = parts[2].parse::<i64>().unwrap();
-        Mapping { source_range: Range::new(source_start, source_start + length - 1), delta}
+        Mapping {
+            source_range: Range::new(source_start, source_start + length - 1),
+            delta,
+        }
     }
 }

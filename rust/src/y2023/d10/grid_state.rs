@@ -1,6 +1,6 @@
 use crate::y2023::d10::grid::{Grid, Tile};
-use crate::y2023::d10::position::Position;
 use crate::y2023::d10::pipe::Direction;
+use crate::y2023::d10::position::Position;
 use crate::y2023::d10::shape::Shape;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
@@ -9,7 +9,7 @@ pub struct GridState<'a> {
     grid: &'a Grid,
     path_a: Path,
     path_b: Path,
-    seen_count: HashMap<Position, u32>
+    seen_count: HashMap<Position, u32>,
 }
 
 impl<'a> GridState<'a> {
@@ -29,7 +29,12 @@ impl<'a> GridState<'a> {
         };
         let mut seen_count = HashMap::new();
         seen_count.insert(start, 1);
-        Ok(GridState { grid, path_a, path_b, seen_count })
+        Ok(GridState {
+            grid,
+            path_a,
+            path_b,
+            seen_count,
+        })
     }
 
     pub fn step(&mut self) -> Result<(), Box<dyn std::error::Error>> {
@@ -59,7 +64,11 @@ impl<'a> GridState<'a> {
     }
 
     pub fn to_shape(&self) -> Shape {
-        let points = self.seen_count.keys().cloned().collect::<HashSet<Position>>();
+        let points = self
+            .seen_count
+            .keys()
+            .cloned()
+            .collect::<HashSet<Position>>();
         Shape::new(self.grid, points)
     }
 }
@@ -69,7 +78,12 @@ impl Display for GridState<'_> {
         let grid = self.grid;
         let n_rows = grid.n_rows();
         let n_cols = grid.n_cols();
-        let path_positions = self.path_a.positions.iter().chain(self.path_b.positions.iter()).collect::<HashSet<&Position>>();
+        let path_positions = self
+            .path_a
+            .positions
+            .iter()
+            .chain(self.path_b.positions.iter())
+            .collect::<HashSet<&Position>>();
         for y in 0..n_rows {
             for x in 0..n_cols {
                 let on_path = path_positions.contains(&&Position { x, y });

@@ -1,12 +1,11 @@
-use std::{collections::HashMap, fmt::Display};
 use indexmap::IndexMap;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::y2023::d15::hash::hash;
 
-
 #[derive(Debug)]
 pub struct LensBoxContainer {
-    boxes: HashMap<u32, LensBox>
+    boxes: HashMap<u32, LensBox>,
 }
 
 impl Display for LensBoxContainer {
@@ -29,14 +28,14 @@ impl Display for LensBoxContainer {
 impl LensBoxContainer {
     pub fn new() -> Self {
         Self {
-            boxes: HashMap::new()
+            boxes: HashMap::new(),
         }
     }
 
     pub fn execute(&mut self, i: &Instruction) {
         let box_num = i.box_num();
         match i {
-            Instruction::SET{label, value} => {
+            Instruction::SET { label, value } => {
                 let box_ = match self.boxes.get_mut(&box_num) {
                     Some(box_) => box_,
                     None => {
@@ -46,12 +45,10 @@ impl LensBoxContainer {
                     }
                 };
                 box_.set(label.to_string(), *value)
-            },
-            Instruction::REMOVE{label} => {
-                match self.boxes.get_mut(&box_num) {
-                    Some(box_) => box_.remove(label),
-                    None => {}
-                }
+            }
+            Instruction::REMOVE { label } => match self.boxes.get_mut(&box_num) {
+                Some(box_) => box_.remove(label),
+                None => {}
             },
         }
     }
@@ -69,7 +66,7 @@ impl LensBoxContainer {
 
 #[derive(Debug)]
 struct LensBox {
-    lenses: IndexMap<String, u32>
+    lenses: IndexMap<String, u32>,
 }
 
 impl Display for LensBox {
@@ -80,13 +77,12 @@ impl Display for LensBox {
         }
         write!(f, "{}", s)
     }
-
 }
 
 impl LensBox {
     fn new() -> Self {
         Self {
-            lenses: IndexMap::new()
+            lenses: IndexMap::new(),
         }
     }
 
@@ -103,17 +99,16 @@ impl LensBox {
     }
 }
 
-
 pub enum Instruction {
-    SET{label: String, value: u32},
-    REMOVE{label: String},
+    SET { label: String, value: u32 },
+    REMOVE { label: String },
 }
 
 impl Display for Instruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Instruction::SET{label, value} => write!(f, "{}={}", label, value),
-            Instruction::REMOVE{label} => write!(f, "{}-", label),
+            Instruction::SET { label, value } => write!(f, "{}={}", label, value),
+            Instruction::REMOVE { label } => write!(f, "{}-", label),
         }
     }
 }
@@ -121,8 +116,8 @@ impl Display for Instruction {
 impl Instruction {
     pub fn box_num(&self) -> u32 {
         match self {
-            Instruction::SET{label, value: _} => hash(label),
-            Instruction::REMOVE{label} => hash(label),
+            Instruction::SET { label, value: _ } => hash(label),
+            Instruction::REMOVE { label } => hash(label),
         }
     }
 
@@ -133,12 +128,17 @@ impl Instruction {
                 Some(s) => s,
                 None => return Err("Invalid label".into()),
             };
-            return Ok(Instruction::REMOVE{label: label.to_string()})
+            return Ok(Instruction::REMOVE {
+                label: label.to_string(),
+            });
         }
         if parts.len() == 2 {
             let label = parts[0];
             let value = parts[1].parse::<u32>()?;
-            return Ok(Instruction::SET{label: label.to_string(), value})
+            return Ok(Instruction::SET {
+                label: label.to_string(),
+                value,
+            });
         }
         Err("Invalid instruction".into())
     }

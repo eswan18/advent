@@ -1,9 +1,8 @@
+use crate::y2023::d19::part::{Field, Part};
 use crate::y2023::d19::rule::Ruleset;
-use crate::y2023::d19::part::{Part, Field};
-
 
 pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let test_section  = contents.split("\n\n").next().ok_or("No blank line")?;
+    let test_section = contents.split("\n\n").next().ok_or("No blank line")?;
     let ruleset = Ruleset::new_from_str(test_section)?;
     let ranges = ruleset.ranges();
 
@@ -19,7 +18,8 @@ pub fn run_b(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
                     let s = s_range.start;
                     let part = Part { x, m, a, s };
                     if ruleset.test(&part)? {
-                        good_combos += x_range.len() * m_range.len() * a_range.len() * s_range.len();
+                        good_combos +=
+                            x_range.len() * m_range.len() * a_range.len() * s_range.len();
                     }
                 }
             }

@@ -73,10 +73,19 @@ impl RowReading {
             println!("parts: {:?}", parts);
             return Err(format!("Invalid row reading: {}", s).into());
         }
-        let readings = parts[0].chars().map(|c| SpringReading::new_from_char(&c)).collect::<Result<Vec<_>, _>>()?;
+        let readings = parts[0]
+            .chars()
+            .map(|c| SpringReading::new_from_char(&c))
+            .collect::<Result<Vec<_>, _>>()?;
 
-        let damaged_counts = parts[1].split(",").map(|s| s.parse::<usize>()).collect::<Result<Vec<_>, _>>()?;
-        Ok(RowReading { readings, damaged_counts })
+        let damaged_counts = parts[1]
+            .split(",")
+            .map(|s| s.parse::<usize>())
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(RowReading {
+            readings,
+            damaged_counts,
+        })
     }
 
     fn first_unknown(&self) -> Option<usize> {
@@ -89,10 +98,14 @@ impl RowReading {
     }
 
     pub fn to_row(&self) -> Row {
-        let springs = self.readings.iter().map(|r| match r {
-            SpringReading::Known(spring) => spring.clone(),
-            _ => panic!("Cannot convert row reading to row with unknowns"),
-        }).collect::<Vec<_>>();
+        let springs = self
+            .readings
+            .iter()
+            .map(|r| match r {
+                SpringReading::Known(spring) => spring.clone(),
+                _ => panic!("Cannot convert row reading to row with unknowns"),
+            })
+            .collect::<Vec<_>>();
         Row { springs }
     }
 
@@ -111,7 +124,10 @@ impl RowReading {
                 for spring in vec![Spring::Operational, Spring::Damaged] {
                     let mut readings = self.readings.clone();
                     readings[i] = SpringReading::Known(spring);
-                    let row_reading = RowReading { readings, damaged_counts: self.damaged_counts.clone() };
+                    let row_reading = RowReading {
+                        readings,
+                        damaged_counts: self.damaged_counts.clone(),
+                    };
                     possibilities.extend(row_reading.possibilities());
                 }
                 possibilities

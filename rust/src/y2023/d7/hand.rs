@@ -1,6 +1,6 @@
-use std::iter;
 use std::collections::HashMap;
 use std::fmt;
+use std::iter;
 
 #[derive(Debug, Clone, PartialEq)]
 enum Card {
@@ -32,7 +32,13 @@ impl Card {
             Card::A => 14,
             Card::K => 13,
             Card::Q => 12,
-            Card::J => if jokers_wild { 1 } else { 11 },
+            Card::J => {
+                if jokers_wild {
+                    1
+                } else {
+                    11
+                }
+            }
             Card::T => 10,
             Card::Value(v) => *v,
         }
@@ -66,14 +72,24 @@ pub struct Hand {
 }
 
 impl Hand {
-    pub fn new_from_line(line: &str, jokers_wild: bool) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new_from_line(
+        line: &str,
+        jokers_wild: bool,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let parts: Vec<&str> = line.split(" ").collect();
         if parts.len() != 2 {
             return Err(format!("Invalid line: {}", line).into());
         }
-        let cards = parts[0].chars().map(|c| Card::new_from_char(&c)).collect::<Result<Vec<Card>, _>>()?;
+        let cards = parts[0]
+            .chars()
+            .map(|c| Card::new_from_char(&c))
+            .collect::<Result<Vec<Card>, _>>()?;
         let bid = parts[1].parse::<u32>()?;
-        Ok(Hand { cards, bid, jokers_wild })
+        Ok(Hand {
+            cards,
+            bid,
+            jokers_wild,
+        })
     }
 
     pub fn wins_ties_over(&self, other: &Self) -> bool {
@@ -94,7 +110,7 @@ impl Hand {
         // Group self.hand cards by value
         let mut card_counts = HashMap::new();
         let mut cards = self.cards.clone();
-        let mut joker_count  = 0;
+        let mut joker_count = 0;
         if self.jokers_wild {
             joker_count = cards.iter().filter(|card| **card == Card::J).count();
             cards = cards.into_iter().filter(|card| *card != Card::J).collect();
@@ -155,14 +171,19 @@ impl Hand {
 
 impl fmt::Display for Hand {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let cards = self.cards.iter().map(|card| match card {
-            Card::A => String::from("A"),
-            Card::K => String::from("K"),
-            Card::Q => String::from("Q"),
-            Card::J => String::from("J"),
-            Card::T => String::from("T"),
-            Card::Value(v) => format!("{}", v)
-        }).collect::<Vec<String>>().join("");
+        let cards = self
+            .cards
+            .iter()
+            .map(|card| match card {
+                Card::A => String::from("A"),
+                Card::K => String::from("K"),
+                Card::Q => String::from("Q"),
+                Card::J => String::from("J"),
+                Card::T => String::from("T"),
+                Card::Value(v) => format!("{}", v),
+            })
+            .collect::<Vec<String>>()
+            .join("");
         write!(f, "{} {}", cards, self.bid)
     }
 }

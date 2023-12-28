@@ -15,6 +15,9 @@ impl Range {
     }
 
     pub fn transform(&self, delta: i64) -> Self {
-        Self { start: self.start + delta, end: self.end + delta }
+        Self {
+            start: self.start + delta,
+            end: self.end + delta,
+        }
     }
 }
