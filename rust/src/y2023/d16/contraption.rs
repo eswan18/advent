@@ -43,7 +43,7 @@ pub enum Direction {
     Right,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Contraption {
     spaces: Vec<Vec<Space>>,
     width: usize,
@@ -94,6 +94,37 @@ impl Contraption {
             },
         }
     }
+
+    pub fn all_entrances(&self) -> Vec<PointWithDirection> {
+        let mut entrances = Vec::new();
+        for y in 0..self.height {
+            entrances.push(PointWithDirection {
+                point: Point { x: 0, y: y as i32 },
+                direction: Direction::Right,
+            });
+            entrances.push(PointWithDirection {
+                point: Point {
+                    x: (self.width - 1) as i32,
+                    y: y as i32,
+                },
+                direction: Direction::Left,
+            });
+        }
+        for x in 0..self.width {
+            entrances.push(PointWithDirection {
+                point: Point { x: x as i32, y: 0 },
+                direction: Direction::Down,
+            });
+            entrances.push(PointWithDirection {
+                point: Point {
+                    x: x as i32,
+                    y: (self.height - 1) as i32,
+                },
+                direction: Direction::Up,
+            });
+        }
+        entrances
+    }
 }
 
 impl Display for Contraption {
@@ -118,7 +149,7 @@ impl Display for Contraption {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Space {
     Empty,
     Mirror(Mirror),
@@ -150,7 +181,7 @@ impl Space {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Mirror {
     Slash,
     Backslash,
@@ -187,7 +218,7 @@ impl Mirror {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Splitter {
     Horizontal,
     Vertical,

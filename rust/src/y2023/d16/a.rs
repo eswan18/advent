@@ -11,8 +11,6 @@ pub fn run_a(contents: &str) -> Result<String, Box<dyn std::error::Error>> {
             direction: Direction::Right,
         },
     );
-    let visual = beam_state.visualize();
-    println!("{}", visual);
 
     loop {
         let found_children = beam_state.step();

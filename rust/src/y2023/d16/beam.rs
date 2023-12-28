@@ -127,6 +127,7 @@ impl BeamState {
         Self { root, contraption, seen }
     }
 
+    #[allow(dead_code)]
     pub fn visualize(&self) -> String {
         self.root.borrow().visualize(&self.contraption)
     }
