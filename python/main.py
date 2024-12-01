@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-YEARS = ['2023']
+YEARS = ['2023', '2024']
 PARTS = ['a', 'b']
 
 USAGE_MESSAGE = """
