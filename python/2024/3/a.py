@@ -1,6 +1,5 @@
 import re
 
-# pattern = re.compile(r'mul((\d\+, \d\+)')
 pattern = re.compile(r'mul\((\d+),(\d+)\)')
 
 def a(input: str) -> str:
