@@ -24,6 +24,7 @@ class DetailedMap:
     guard_visited: set[OrientedPosition]
     width: int
     height: int
+    has_looped: bool = False
 
     @classmethod
     def from_str(cls, s: str) -> Self:
@@ -56,6 +57,8 @@ class DetailedMap:
         if next_pos in self.obstacles:
             # At obstacles, we just rotate the guard instead of moving.
             self.guard_at = OrientedPosition(self.guard_at.position, rotate_90(self.guard_at.orientation))
+            if self.guard_at in self.guard_visited:
+                self.has_looped = True
             return True
         if next_pos.x < 0 or next_pos.x >= self.width:
             return False
@@ -63,6 +66,8 @@ class DetailedMap:
             return False
 
         self.guard_at = OrientedPosition(next_pos, self.guard_at.orientation)
+        if self.guard_at in self.guard_visited:
+            self.has_looped = True
         self.guard_visited.add(self.guard_at)
         return True
     
