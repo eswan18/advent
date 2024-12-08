@@ -2,6 +2,7 @@ from typing import Self
 from dataclasses import dataclass
 from collections import defaultdict
 from itertools import combinations
+import math
 
 @dataclass(frozen=True)
 class Position:
@@ -18,6 +19,14 @@ class Position:
         return self.__class__(
             x=self.x - other.x,
             y=self.y - other.y,
+        )
+    
+    def reduce(self) -> Self:
+        """Get a position with the smallest magnitude while still using whole number components."""
+        gcd = math.gcd(self.x, self.y)
+        return self.__class__(
+            x=self.x // gcd,
+            y=self.y // gcd,
         )
 
 
@@ -62,4 +71,34 @@ class AntennaMap:
         result = set()
         for freq in self.antennae.keys():
             result = result.union(self.antinodes_for_freq(freq))
+        return result
+    
+    def antinodes_for_freq_part_b(self, freq: str) -> set[Position]:
+        result = set()
+        antennae = self.antennae[freq]
+        for a, b in combinations(antennae, 2):
+            a_to_b = (b - a).reduce()
+            result.add(a)
+            # Find all nodes "before" a.
+            antinode = a
+            while True:
+                antinode = antinode - a_to_b
+                if self.in_bounds(antinode):
+                    result.add(antinode)
+                else:
+                    break
+            # Find all nodes "after" a.
+            antinode = a
+            while True:
+                antinode = antinode + a_to_b
+                if self.in_bounds(antinode):
+                    result.add(antinode)
+                else:
+                    break
+        return result
+    
+    def antinodes_part_b(self) -> set[Position]:
+        result = set()
+        for freq in self.antennae.keys():
+            result = result.union(self.antinodes_for_freq_part_b(freq))
         return result
