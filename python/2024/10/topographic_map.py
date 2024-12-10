@@ -69,3 +69,27 @@ class TopographicMap:
         if not self[pt] == 0:
             raise RuntimeError("Trailhead must be a nadir")
         return len(self.reachable_peaks(pt))
+    
+    def paths_to_peaks(self, from_: Point) -> set[tuple[Point]]:
+        if self[from_] != 0:
+            raise RuntimeError("Can't start from non-nadir")
+        at_value = 0
+        at_paths: set[tuple[Point]] = {(from_,)}
+        while at_value < 9:
+            next_at_value = at_value + 1
+            next_at_paths = set()
+            for path in at_paths:
+                next_pts = self.pts_reachable_from(path[-1])
+                for pt in next_pts:
+                    if self[pt] == next_at_value:
+                        next_at_paths.add(path + (pt,))
+            at_value = next_at_value
+            at_paths = next_at_paths
+        return at_paths
+        
+    
+    def trailhead_rating(self, pt: Point) -> int:
+        if not self[pt] == 0:
+            raise RuntimeError("Trailhead must be a nadir")
+        paths = self.paths_to_peaks(pt)
+        return len(paths)
