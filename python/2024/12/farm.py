@@ -1,6 +1,7 @@
 from typing import Self, NewType
 from dataclasses import dataclass
 from itertools import combinations, pairwise
+from collections import Counter
 
 PlantVariant = NewType("PlantVariant", str)
 
@@ -9,7 +10,7 @@ PlantVariant = NewType("PlantVariant", str)
 class BorderPoint:
     x: float
     y: float
-    surrounds: 'Point'
+    surrounds: "Point"
 
     def __str__(self) -> str:
         return f"({self.x}, {self.y})"
@@ -60,14 +61,20 @@ class Region:
             return {
                 BorderPoint(pt.x, pt.y - 0.5, surrounds=pt),
                 BorderPoint(pt.x, pt.y + 0.5, surrounds=pt),
-        }
+            }
 
-        borders = set()
+        borders: dict[tuple[int, int], BorderPoint] = {}
         for pt in self.plots:
-            # Using symmetric difference allows us to discard shared borders
-            # (which are thus not borders at all).
-            borders = borders.symmetric_difference(pt_horizontal_borders(pt))
-        return borders
+            new_borders = pt_horizontal_borders(pt)
+            # Get rid of border coordinates that occur twice, as those are shared borders
+            # and thus not borders at all.
+            for border in new_borders:
+                key = (border.x, border.y)
+                if key in borders:
+                    del borders[key]
+                else:
+                    borders[key] = border
+        return set(borders.values())
 
     def vertical_borders(self) -> set[BorderPoint]:
         """Return all the vertical borders this region has."""
@@ -78,12 +85,16 @@ class Region:
                 BorderPoint(pt.x + 0.5, pt.y, surrounds=pt),
             }
 
-        borders = set()
+        borders = {}
         for pt in self.plots:
-            # Using symmetric difference allows us to discard shared borders
-            # (which are thus not borders at all).
-            borders = borders.symmetric_difference(pt_vertical_borders(pt))
-        return borders
+            new_borders = pt_vertical_borders(pt)
+            for border in new_borders:
+                key = (border.x, border.y)
+                if key in borders:
+                    del borders[key]
+                else:
+                    borders[key] = border
+        return set(borders.values())
 
     def side_count(self) -> int:
         # Order the borders so we can easily see if they connect horizontally.
@@ -107,8 +118,6 @@ class Region:
                 #   ABBAAA
                 #   ABBAAA
                 #   AAAAAA
-                print(f'hor triggered on {self.plant}')
-                print(border_a, border_b)
                 horizontal_side_count += 1
                 continue
         # Order the borders so we can easily see if they connect vertically.
@@ -123,17 +132,14 @@ class Region:
                 vertical_side_count += 1
                 continue
             if y_offset == 1 and border_a.surrounds.x != border_b.surrounds.x:
-                print(f'vert triggered on {self.plant}')
-                print(border_a, border_b)
                 vertical_side_count += 1
                 continue
         return horizontal_side_count + vertical_side_count
 
     def price(self) -> int:
         return self.area() * self.perimeter()
-    
+
     def price_by_sides(self) -> int:
-        print(self.area(), self.side_count())
         return self.area() * self.side_count()
 
 
@@ -143,7 +149,7 @@ class Farm:
 
     def total_price(self) -> int:
         return sum(region.price() for region in self.regions)
-    
+
     def total_price_by_sides(self) -> int:
         return sum(region.price_by_sides() for region in self.regions)
 
