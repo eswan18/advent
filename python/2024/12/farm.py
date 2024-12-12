@@ -1,5 +1,6 @@
 from typing import Self, NewType
 from dataclasses import dataclass
+from itertools import combinations
 
 PlantVariant = NewType('PlantVariant', str)
 
@@ -10,15 +11,41 @@ class Point:
 
     def __str__(self) -> str:
         return f'({self.x}, {self.y})'
+    
+    def touches(self, other: Self) -> bool:
+        if self.x == other.x and abs(self.y - other.y) == 1:
+            return True
+        if self.y == other.y and abs(self.x - other.x) == 1:
+            return True
+        return False
 
 @dataclass(frozen=True)
 class Region:
     plant: PlantVariant
     plots: frozenset[Point]
 
+    def area(self) -> int:
+        return len(self.plots)
+    
+    def perimeter(self) -> int:
+        # For every pair of points, if they touch, count 1 shared border.
+        total_shared_borders = sum(
+            int(pt_a.touches(pt_b))
+            for pt_a, pt_b in combinations(self.plots, 2)
+        )
+        total_borders = 4 * self.area() - 2 * total_shared_borders
+        return total_borders
+    
+    def price(self) -> int:
+        return self.area() * self.perimeter()
+            
+
 @dataclass
 class Farm:
     regions: set[Region]
+
+    def total_price(self) -> int:
+        return sum(region.price() for region in self.regions)
 
     def __str__(self) -> str:
         s = ''
