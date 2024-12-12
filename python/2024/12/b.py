@@ -1,4 +1,4 @@
-from .farm import UnregionedFarm, Region, Point
+from .farm import UnregionedFarm
 
 def b(input: str) -> str:
     raw_farm =UnregionedFarm.from_str(input)

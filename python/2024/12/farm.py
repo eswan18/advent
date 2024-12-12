@@ -1,7 +1,6 @@
 from typing import Self, NewType
 from dataclasses import dataclass
 from itertools import combinations, pairwise
-from collections import Counter
 
 PlantVariant = NewType("PlantVariant", str)
 
