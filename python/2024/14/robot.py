@@ -80,6 +80,10 @@ class RobotGrid:
         counts = self.counts_by_quadrant()
         return counts[0] * counts[1] * counts[2] * counts[3]
     
+    def is_symmetric(self) -> bool:
+        counts = self.counts_by_quadrant()
+        return counts[0] == counts[3] and counts[1] == counts[2]
+    
     def __str__(self) -> str:
         positions = Counter(robot.at for robot in self.robots)
         s = ''
