@@ -3,6 +3,7 @@ from math import sqrt
 
 from typing import Self
 from dataclasses import dataclass
+from fractions import Fraction
 
 
 @dataclass(frozen=True)
@@ -23,8 +24,12 @@ class Vector:
     def as_position(self) -> Position:
         return Position(self.x, self.y)
 
-    def __add__(self, other: Self) -> Self:
-        return Vector(self.x + other.x, self.y + other.y)
+    def __add__(self, other: Self | int) -> Self:
+        if isinstance(other, int):
+            return self.__class__(self.x + other, self.y + other)
+        if isinstance(other, self.__class__):
+            return self.__class__(self.x + other.x, self.y + other.y)
+        return NotImplemented
 
     def __mul__(self, coef: int) -> Self:
         return Vector(self.x * coef, self.y * coef)
@@ -63,6 +68,19 @@ class Position:
                 a_coef += 1
         raise ValueError("No whole number factors")
 
+    def smart_factor(self, a: Vector, b: Vector) -> tuple[int, int]:
+        "Find the coefs of two component vectors or raise ValueError. But smart."
+        # I had to talk with my smart friend ChatGPT to learn about this method.
+        determinant = a.x * b.y - b.x * a.y
+        if determinant == 0:
+            raise RuntimeError("linearly dependent")
+        m = (b.y * self.x - b.x * self.y) / determinant
+        n = (-a.y * self.x + a.x * self.y) / determinant
+        result = (int(m), int(n))
+        if result != (m, n):
+            raise ValueError("non whole-number factors")
+        return result
+
 
 @dataclass
 class Game:
@@ -71,15 +89,21 @@ class Game:
     prize: Position
 
     @classmethod
-    def from_str(cls, s: str) -> Self:
+    def from_str(cls, s: str, fix_conv_error: bool = False) -> Self:
         lines = s.splitlines()
         a = Vector.from_str(lines[0].removeprefix("Button A: "))
         b = Vector.from_str(lines[1].removeprefix("Button B: "))
         prize_vec = Vector.from_str(lines[2].removeprefix("Prize: "))
+        if fix_conv_error:
+            prize_vec += 10000000000000
         prize = prize_vec.as_position()
         return cls(a, b, prize)
 
-    def cost(self) -> int | None:
+    def cost(self) -> int:
         """How many tokens would it take to win this game? If it can be done."""
         a_coef, b_coef = self.prize.factor(self.a, self.b)
+        return 3 * a_coef + b_coef
+
+    def smart_cost(self) -> int:
+        a_coef, b_coef = self.prize.smart_factor(self.a, self.b)
         return 3 * a_coef + b_coef
