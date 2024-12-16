@@ -1,49 +1,47 @@
 from __future__ import annotations
 import time
+from heapq import heappop, heappush
 from typing import Self
 from dataclasses import dataclass
 
 
-def find_shortest_path(maze: Maze, path: Path | None = None) -> int | None:
-    # On the first invocation, create the path.
-    if path is None:
-        path = Path(points=(maze.start,), score=0, facing=Position(1, 0))
-    #print(maze.path_overlay(path))
-    #time.sleep(0.5)
-    # Base cases: we're at the end or we're stuck.
-    if path.points[-1] == maze.end:
-        print(path.score)
-        return path.score
-    if maze[path.points[-1]] == "#":
-        return None
+def find_shortest_path(maze: Maze) -> int | None:
+    path_heap = [Path(points=(maze.start,), score=0, facing=Position(1, 0))]
+    # All the points and facing directions we've already seen, to avoid traversing over
+    # the same point twice.
+    seen_before: set[tuple[Position, Position]] = set()
 
-    # Decide where we can go next and how much it'll cost.
-    # Start by continuing in the direction we're facing, since that's the lowest score.
-    next_options: list[tuple[Position, int]] = [(path.facing, 1)]
-    if path.facing in (Position(1, 0), Position(-1, 0)):
-        next_options.append((Position(0, 1), 1001))
-        next_options.append((Position(0, -1), 1001))
-    else:  # Position must be in (Position(0, 1), Position(0, -1))
-        next_options.append((Position(1, 0), 1001))
-        next_options.append((Position(-1, 0), 1001))
-
-    possible_scores: set[int] = set()
-    for direction, added_score in next_options:
-        next_point = path.points[-1] + direction
-        if next_point in path.points:
-            # Don't ever loop -- it's never the fastest way.
+    while path_heap:
+        shortest_path = heappop(path_heap)
+        last_pt = shortest_path.points[-1]
+        if maze[last_pt] == '#':
+            # If this path ends at a wall, it's a dead end.
             continue
-        result = find_shortest_path(
-            maze,
-            path=Path(
-                points=path.points + (next_point,),
-                score=path.score + added_score,
+        if last_pt == maze.end:
+            # If this path ends and END, we found the shortest path.
+            return shortest_path.score
+        # Otherwise, find all the next steps for this path, and add them to the heap.
+        next_options: list[tuple[Position, int]] = [(shortest_path.facing, 1)]
+        if shortest_path.facing in (Position(1, 0), Position(-1, 0)):
+            # Turn from horizontal to vertical.
+            next_options.append((Position(0, 1), 1001))
+            next_options.append((Position(0, -1), 1001))
+        else:  # Position must be in (Position(0, 1), Position(0, -1))
+            # Turn from vertical to horizontal.
+            next_options.append((Position(1, 0), 1001))
+            next_options.append((Position(-1, 0), 1001))
+        for direction, added_score in next_options:
+            next_point = shortest_path.points[-1] + direction
+            if (next_point, direction) in seen_before:
+                # Skip point/direction combos we've already seen
+                continue
+            next_path = Path(
+                points=shortest_path.points + (next_point,),
+                score=shortest_path.score + added_score,
                 facing=direction,
-            ),
-        )
-        if result is not None:
-            possible_scores.add(result)
-    return min(possible_scores) if len(possible_scores) > 0 else None
+            )
+            heappush(path_heap, next_path)
+            seen_before.add((next_point, direction))
 
 
 @dataclass(frozen=True)
@@ -66,6 +64,11 @@ class Path:
 
     def __str__(self) -> str:
         return ",".join(f"({pt.x}, {pt.y})" for pt in self.points)
+    
+    def __lt__(self, other: Self) -> bool:
+        if not isinstance(other, Path):
+            return NotImplemented
+        return self.score < other.score
 
 
 @dataclass
