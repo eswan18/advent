@@ -1,5 +1,4 @@
 from __future__ import annotations
-import time
 from heapq import heappop, heappush
 from typing import Self
 from dataclasses import dataclass
@@ -14,7 +13,7 @@ def find_shortest_path(maze: Maze) -> int | None:
     while path_heap:
         shortest_path = heappop(path_heap)
         last_pt = shortest_path.points[-1]
-        if maze[last_pt] == '#':
+        if maze[last_pt] == "#":
             # If this path ends at a wall, it's a dead end.
             continue
         if last_pt == maze.end:
@@ -44,7 +43,65 @@ def find_shortest_path(maze: Maze) -> int | None:
             seen_before.add((next_point, direction))
 
 
-@dataclass(frozen=True)
+def find_all_shortest_paths(maze: Maze) -> list[Path]:
+    path_heap = [Path(points=(maze.start,), score=0, facing=Position(1, 0))]
+    # All the points and facing directions we've already seen and how long it took to get there.
+    # We never want to revisit a point that we've found a shorter way to.
+    seen_before: dict[tuple[Position, Position], int] = {}
+    shortest_yet = -1
+    shortest_paths = []
+
+    while path_heap:
+        shortest_path = heappop(path_heap)
+        last_pt = shortest_path.points[-1]
+        if maze[last_pt] == "#":
+            # If this path ends at a wall, it's a dead end.
+            continue
+        if last_pt == maze.end:
+            # If this path ends at END, we found a shortest path.
+            if shortest_yet > 0 and shortest_path.score > shortest_yet:
+                # If this path is longer than the shortest we've seen, then we've seen all the shortest paths.
+                break
+            # Otherwise, it's the new shortest path or tied for the shortest path.
+            shortest_yet = shortest_path.score
+            shortest_paths.append(shortest_path)
+            continue
+        # Otherwise, find all the next steps for this path, and add them to the heap.
+        next_options: list[tuple[Position, int]] = [(shortest_path.facing, 1)]
+        if shortest_path.facing in (Position(1, 0), Position(-1, 0)):
+            # Turn from horizontal to vertical.
+            next_options.append((Position(0, 1), 1001))
+            next_options.append((Position(0, -1), 1001))
+        else:  # Position must be in (Position(0, 1), Position(0, -1))
+            # Turn from vertical to horizontal.
+            next_options.append((Position(1, 0), 1001))
+            next_options.append((Position(-1, 0), 1001))
+        for direction, added_score in next_options:
+            next_point = shortest_path.points[-1] + direction
+            new_score = shortest_path.score + added_score
+            if lowest_score_for_point := seen_before.get((next_point, direction)):
+                # Skip point/direction combos we've already gotten to faster.
+                if lowest_score_for_point < new_score:
+                    continue
+            next_path = Path(
+                points=shortest_path.points + (next_point,),
+                score=new_score,
+                facing=direction,
+            )
+            heappush(path_heap, next_path)
+            seen_before[next_point, direction] = new_score
+        
+    # Now we know the shortest paths.
+    return shortest_paths
+
+
+def n_tiles_covered_by_shortest_path(maze: Maze) -> int:
+    shortest_paths = find_all_shortest_paths(maze)
+    positions = {position for path in shortest_paths for position in path.points}
+    return len(positions)
+
+
+@dataclass(frozen=True, order=True)
 class Position:
     x: int
     y: int
@@ -56,19 +113,14 @@ class Position:
         return self.__class__(x=self.x - other.x, y=self.y - other.y)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Path:
-    points: tuple[Position, ...]
     score: int
+    points: tuple[Position, ...]
     facing: Position
 
     def __str__(self) -> str:
         return ",".join(f"({pt.x}, {pt.y})" for pt in self.points)
-    
-    def __lt__(self, other: Self) -> bool:
-        if not isinstance(other, Path):
-            return NotImplemented
-        return self.score < other.score
 
 
 @dataclass
