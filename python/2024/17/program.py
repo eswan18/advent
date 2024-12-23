@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Literal, Self
+from typing import Literal, Self, Iterator
 from dataclasses import dataclass
 
 
@@ -56,13 +56,11 @@ class State:
             case _:
                 raise ValueError(f"Unexpected instruction {instr}")
 
-    def run(self, instructions: list[Instruction]) -> list[int]:
-        output: list[int] = []
+    def run(self, instructions: list[Instruction]) -> Iterator[int]:
         while self.ip < len(instructions):
             result = self.eval_instruction(instructions[self.ip])
             if result is not None:
-                output.append(result)
-        return output
+                yield result
 
 
 @dataclass(frozen=True)
