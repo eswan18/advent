@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-YEARS = ['2023', '2024']
+YEARS = ['2023', '2024', '2025']
 PARTS = ['a', 'b']
 
 USAGE_MESSAGE = """
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     # Validation
     if str(year) not in YEARS:
-        raise ValueError("year must be 2023")
+        raise ValueError("year must be 2023, 2024, or 2025")
     if part not in PARTS:
         raise ValueError("part must be either 'a' or 'b'")
     
