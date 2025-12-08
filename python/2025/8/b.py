@@ -1,121 +1,77 @@
-from collections import Counter
+import math
 from typing import Self
 from dataclasses import dataclass
+from itertools import combinations
+import heapq
+
 
 @dataclass(frozen=True)
 class Point:
     x: int
     y: int
-
-@dataclass(frozen=True)
-class GameBoard:
-    height: int
-    width: int
-    start: Point
-    splitters: set[Point]
+    z: int
 
     @classmethod
-    def from_str(cls, s: str) -> Self:
-        lines = s.strip().splitlines()
-        height = len(lines)
-        width = len(lines[0].strip())
-        # The start is always in the first line so we can check there and skip the rest.
-        start_x = lines[0].find('S')
-        if start_x == -1:
-            raise RuntimeError
-        start = Point(start_x, 0)
-
-        # Now search for splitters in the following lines.
-        splitters: set[Point] = set()
-        for y, line in enumerate(lines[1:], 1):
-            new_pts = set(Point(x, y) for (x, val) in enumerate(line) if val == '^')
-            splitters = splitters.union(new_pts)
-            
-        return cls(height=height, width=width, start=start, splitters=splitters)
+    def from_line(cls, line: str) -> Self:
+        x, y, z = line.strip().split(',')
+        return cls(x=int(x), y=int(y), z=int(z))
     
-    def __str__(self) -> str:
-        s = []
-        for y in range(self.height):
-            for x in range(self.width):
-                pt = Point(x, y)
-                if pt in self.splitters:
-                    s.append('^')
-                elif pt == self.start:
-                    s.append('S')
-                else:
-                    s.append('.')
-            s.append('\n')
-        return ''.join(s)
-
+    def distance_from(self, pt: Self) -> float:
+        return math.sqrt(
+            ((self.x - pt.x) ** 2)
+            + ((self.y - pt.y) ** 2)
+            + ((self.z - pt.z) ** 2)
+        )
+    
 
 @dataclass(frozen=True)
-class GameState:
-    board: GameBoard
-    current_beam_locations: Counter[Point]
-    all_beam_locations: Counter[Point]
-    n_splits: int = 0
-
-    @classmethod
-    def new_from_board(cls, board: GameBoard) -> Self:
-        return cls(
-            board=board,
-            current_beam_locations=Counter([board.start]),
-            all_beam_locations=Counter([board.start]),
-        )
-    
-    def step(self) -> Self:
-        next_beam_locations: Counter[Point] = Counter()
-        n_splits = 0
-        for point, count in self.current_beam_locations.items():
-            if point in self.board.splitters:
-                n_splits += count
-                # Add left & right
-                left = Point(point.x-1, point.y)
-                right = Point(point.x+1, point.y)
-                if left.x >= 0:
-                    next_beam_locations[left] += count
-                if right.x < self.board.width:
-                    next_beam_locations[right] += count
-            else:
-                # Just go down one
-                next_pt = Point(point.x, point.y+1)
-                if next_pt.y < self.board.height:
-                    next_beam_locations[next_pt] += count
-        return self.__class__(
-            board=self.board,
-            current_beam_locations=next_beam_locations,
-            all_beam_locations=self.all_beam_locations + next_beam_locations,
-            n_splits=self.n_splits + n_splits
-        )
-    
-    def __str__(self) -> str:
-        s = []
-        for y in range(self.board.height):
-            for x in range(self.board.width):
-                pt = Point(x, y)
-                if pt in self.board.splitters:
-                    s.append('  ^  ')
-                elif pt == self.board.start:
-                    s.append('  S  ')
-                elif pt in self.all_beam_locations:
-                    s.append(f' {self.all_beam_locations[pt]:02}_ ')
-                else:
-                    s.append('  .  ')
-            s.append('\n')
-        return ''.join(s)
-
+class Box:
+    id: int
+    pt: Point
 
 
 def b(input: str) -> str:
-    board = GameBoard.from_str(input)
-    state = GameState.new_from_board(board)
+    points = [Point.from_line(line) for line in input.splitlines()]
+    boxes = [Box(id=idx, pt=pt) for (idx, pt) in enumerate(points)]
+    n_boxes = len(boxes)
+    # Find the distances between all possible pairs of boxes, keeping them in a heap
+    distances: list[tuple[float, tuple[int, int]]] = []
+    for i, j in combinations(range(n_boxes), 2):
+        element = (boxes[i].pt.distance_from(boxes[j].pt), (i, j))
+        heapq.heappush(distances, element)
+    
+    # A mapping from a box number to its cluster number, for boxes in a cluster
+    clusters: dict[int, int] = {}
+
     while True:
-        state = state.step()
-        if len(state.current_beam_locations) == 0:
-            break
-    # Sum up the number of times we got to any point in the bottom row.
-    bottom_row_counts = [
-        count for (pt, count) in state.all_beam_locations.items()
-        if pt.y == (board.height - 1)
-    ]
-    return str(sum(bottom_row_counts))
+        _distance, (i, j) = heapq.heappop(distances)
+        # "Join" these boxes. There are a few scenarios.
+        if i in clusters and j not in clusters:
+            # Add j to the same cluster as i
+            clusters[j] = clusters[i]
+        elif j in clusters and i not in clusters:
+            # Add i to the same cluster as j
+            clusters[i] = clusters[j]
+
+        elif i not in clusters and j not in clusters:
+            # If neither is in a cluster, we make a new cluster!
+            if len(clusters) > 0:
+                new_cluster_num = max(clusters.values()) + 1
+            else:
+                new_cluster_num = 0
+            clusters[i] = new_cluster_num
+            clusters[j] = new_cluster_num
+        
+        else:
+            # The tricky case: i & j are already in different clusters.
+            # We'll identify j's cluster and move it into i's.
+            merged_from = clusters[j]
+            merged_into = clusters[i]
+            for box_id in clusters:
+                if clusters[box_id] == merged_from:
+                    clusters[box_id] = merged_into
+        
+        if len(clusters) >= len(boxes):
+            n_clusters = len(set(clusters.values()))
+            if n_clusters == 1:
+                return str(boxes[i].pt.x * boxes[j].pt.x)
