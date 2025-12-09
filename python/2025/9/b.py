@@ -1,77 +1,128 @@
-import math
-from typing import Self
-from dataclasses import dataclass
-from itertools import combinations
-import heapq
+from itertools import combinations, pairwise
+from typing import Self, Iterator
+from heapq import heappop, heappush
 
+from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Point:
     x: int
     y: int
-    z: int
 
     @classmethod
-    def from_line(cls, line: str) -> Self:
-        x, y, z = line.strip().split(',')
-        return cls(x=int(x), y=int(y), z=int(z))
-    
-    def distance_from(self, pt: Self) -> float:
-        return math.sqrt(
-            ((self.x - pt.x) ** 2)
-            + ((self.y - pt.y) ** 2)
-            + ((self.z - pt.z) ** 2)
-        )
-    
+    def from_str(cls, s: str) -> Self:
+        str_x, str_y = s.strip().split(',')
+        return cls(x=int(str_x), y=int(str_y))
+
+    def is_on_line(self, a: Self, b: Self):
+        """
+        Check if a point is on the line defined by (a, b)
+
+        The line must be perfectly vertical or horizontal. Sorry.
+        """
+        # If the line is vertical.
+        if a.x == b.x:
+            if self.x != a.x:
+                return False
+            if a.y <= self.y <= b.y:
+                return True
+            if b.y <= self.y <= a.y:
+                return True
+            return False
+        # If the line is horizontal.
+        if a.y == b.y:
+            if self.y != a.y:
+                return False
+            if a.x <= self.x <= b.x:
+                return True
+            if b.x <= self.x <= a.x:
+                return True
+            return False
+        raise ValueError("these points aren't a horizontal or vertical line")
+
 
 @dataclass(frozen=True)
-class Box:
-    id: int
-    pt: Point
+class Rectangle:
+    a: Point
+    b: Point
+
+    def area(self) -> int:
+        height = abs(self.a.y - self.b.y) + 1
+        width = abs(self.a.x - self.b.x) + 1
+        return width * height
+
+
+@dataclass
+class Polygon:
+    points: list[Point]
+    _max_y: int = -1
+
+    def __post_init__(self):
+        self._max_y = max(pt.y for pt in self.points)
+    
+    def vertices(self) -> Iterator[tuple[Point, Point]]:
+        """Get all vertices around the Polygon."""
+        for a, b in pairwise(self.points):
+            yield (a, b)
+        # The final point connects back to the first.
+        yield self.points[-1], self.points[0]
+        return
+    
+    def edges_contain_point(self, pt: Point) -> bool:
+        """Check if a point is on one of the edges."""
+        for a, b in self.vertices():
+            if pt.is_on_line(a, b):
+                return True
+        return False
+    
+    def contains_point(self, pt: Point) -> bool:
+        """Check if a point is inside the shape or on its border."""
+        # Start by checking if the point is on the border.
+        if self.edges_contain_point(pt):
+            return True
+
+        # If it's not on the border, maybe it's in the shape. We use ray-casting.
+        # We'll ray-cast by just incrementing the y value.
+        n_edge_crosses = 0
+
+        # Perturbing the x-coord very slightly keeps us from weird cases where we trace
+        # the border of the shape and double-count crossings.
+        x = pt.x + 0.5
+        y = pt.y
+
+        while y <= (self._max_y + 1):
+            if self.edges_contain_point(Point(x, y)):
+                n_edge_crosses += 1
+            y += 1
+        return (n_edge_crosses % 2) ==1
+    
+    def contains_rectangle(self, r: Rectangle) -> bool:
+        """Check if a rectangle is fully contained in the polygon, including edges."""
+        corners = [r.a, r.b, Point(x=r.a.x, y=r.b.y), Point(x=r.b.x, y=r.a.y)]
+        for c in corners:
+            if not self.contains_point(c):
+                return False
+        # If all the corners were in the shape, we have to do more... but we'll skip for now.
+        return True
+
+
 
 
 def b(input: str) -> str:
-    points = [Point.from_line(line) for line in input.splitlines()]
-    boxes = [Box(id=idx, pt=pt) for (idx, pt) in enumerate(points)]
-    n_boxes = len(boxes)
-    # Find the distances between all possible pairs of boxes, keeping them in a heap
-    distances: list[tuple[float, tuple[int, int]]] = []
-    for i, j in combinations(range(n_boxes), 2):
-        element = (boxes[i].pt.distance_from(boxes[j].pt), (i, j))
-        heapq.heappush(distances, element)
-    
-    # A mapping from a box number to its cluster number, for boxes in a cluster
-    clusters: dict[int, int] = {}
+    points = [Point.from_str(line) for line in input.splitlines()]
+    shape = Polygon(points=points)
 
-    while True:
-        _distance, (i, j) = heapq.heappop(distances)
-        # "Join" these boxes. There are a few scenarios.
-        if i in clusters and j not in clusters:
-            # Add j to the same cluster as i
-            clusters[j] = clusters[i]
-        elif j in clusters and i not in clusters:
-            # Add i to the same cluster as j
-            clusters[i] = clusters[j]
+    rectangles: list[tuple[int, Rectangle]] = []
 
-        elif i not in clusters and j not in clusters:
-            # If neither is in a cluster, we make a new cluster!
-            if len(clusters) > 0:
-                new_cluster_num = max(clusters.values()) + 1
-            else:
-                new_cluster_num = 0
-            clusters[i] = new_cluster_num
-            clusters[j] = new_cluster_num
-        
-        else:
-            # The tricky case: i & j are already in different clusters.
-            # We'll identify j's cluster and move it into i's.
-            merged_from = clusters[j]
-            merged_into = clusters[i]
-            for box_id in clusters:
-                if clusters[box_id] == merged_from:
-                    clusters[box_id] = merged_into
-        
-        if len(clusters) >= len(boxes):
-            n_clusters = len(set(clusters.values()))
-            if n_clusters == 1:
-                return str(boxes[i].pt.x * boxes[j].pt.x)
+    max_area = -1
+    rect_in_question = None
+    for a, b in combinations(points, 2):
+        rectangle = Rectangle(a, b)
+        if shape.contains_rectangle(rectangle):
+            if rectangle.area() > max_area:
+                max_area = rectangle.area()
+                rect_in_question = rectangle
+
+    print(max_area)
+    print(rect_in_question)
+
