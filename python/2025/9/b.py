@@ -4,7 +4,7 @@ from heapq import heappop, heappush
 
 from dataclasses import dataclass
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Point:
     x: int
     y: int
@@ -41,7 +41,7 @@ class Point:
         raise ValueError("these points aren't a horizontal or vertical line")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Rectangle:
     a: Point
     b: Point
@@ -50,6 +50,18 @@ class Rectangle:
         height = abs(self.a.y - self.b.y) + 1
         width = abs(self.a.x - self.b.x) + 1
         return width * height
+    
+    def as_points(self) -> Iterator[Point]:
+        """Get all the points that compose the rectangle."""
+        xs = (self.a.x, self.b.x)
+        ys = (self.a.y, self.b.y)
+        min_x = min(*xs)
+        max_x = max(*xs)
+        min_y = min(*ys)
+        max_y = max(*ys)
+        for x in range(min_x, max_x+1):
+            for y in range(min_y, max_y+1):
+                yield Point(x, y)
 
 
 @dataclass
@@ -96,33 +108,44 @@ class Polygon:
             y += 1
         return (n_edge_crosses % 2) ==1
     
-    def contains_rectangle(self, r: Rectangle) -> bool:
+    def contains_rectangle_corners(self, r: Rectangle) -> bool:
         """Check if a rectangle is fully contained in the polygon, including edges."""
-        corners = [r.a, r.b, Point(x=r.a.x, y=r.b.y), Point(x=r.b.x, y=r.a.y)]
+        # corners = [r.a, r.b, Point(x=r.a.x, y=r.b.y), Point(x=r.b.x, y=r.a.y)]
+        # we know that the rectangles defining-corners will be on the border of the
+        # shape, because that's where they came from. So only check the other two.
+        corners = [Point(x=r.a.x, y=r.b.y), Point(x=r.b.x, y=r.a.y)]
         for c in corners:
             if not self.contains_point(c):
                 return False
-        # If all the corners were in the shape, we have to do more... but we'll skip for now.
         return True
-
-
-
+    
+    def contains_all_rectangle_points(self, r: Rectangle) -> bool:
+        for pt in r.as_points():
+            if not self.contains_point(pt):
+                return False
+        return True
+    
 
 def b(input: str) -> str:
     points = [Point.from_str(line) for line in input.splitlines()]
     shape = Polygon(points=points)
 
-    rectangles: list[tuple[int, Rectangle]] = []
-
-    max_area = -1
-    rect_in_question = None
+    # Find the biggest rectangles; order them in a heap.
+    rectangle_areas: list[tuple[int, Rectangle]] = []
     for a, b in combinations(points, 2):
         rectangle = Rectangle(a, b)
-        if shape.contains_rectangle(rectangle):
-            if rectangle.area() > max_area:
-                max_area = rectangle.area()
-                rect_in_question = rectangle
+        area = rectangle.area()
+        heappush(rectangle_areas, (-area, rectangle))
 
-    print(max_area)
-    print(rect_in_question)
+    # Now start at the biggest and keep going until we find one entirely within the
+    # polygon.
+    while rectangle_areas:
+        (area, rectangle) = heappop(rectangle_areas)
+        print(f'Checking rect of size {-1 * area}')
+        if shape.contains_rectangle_corners(rectangle):
+            # If we pass the faster check, do the full check.
+            if shape.contains_all_rectangle_points(rectangle):
+                return str(area * -1)
+
+    raise RuntimeError
 
