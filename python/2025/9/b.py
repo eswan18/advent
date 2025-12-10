@@ -1,9 +1,20 @@
 from itertools import combinations, pairwise
-from typing import Self, Iterator
+from typing import Self, Iterator, Protocol
 from heapq import heappop, heappush
 from functools import cache, cached_property
 
 from dataclasses import dataclass
+
+class HasEdges(Protocol):
+    def edges(self) -> Iterator['Line']:
+        ...
+
+def intersects(a: HasEdges, b: HasEdges) -> bool:
+    for a_edge in a.edges():
+        for b_edge in b.edges():
+            if a_edge.crosses(b_edge):
+                return True
+    return False
 
 @dataclass(frozen=True, order=True)
 class Point:
@@ -62,6 +73,39 @@ class Point:
             raise ValueError("these points aren't aligned horizontally or vertically.")
 
 
+@dataclass(frozen=True)
+class Line:
+    a: Point
+    b: Point
+
+    def is_x_line(self) -> bool:
+        return self.a.x == self.b.x
+    
+    def is_y_line(self) -> bool:
+        return self.a.y == self.b.y
+    
+    def crosses(self, other: Self) -> bool:
+        x_line = None
+        y_line = None
+        if self.is_x_line():
+            x_line = self
+        elif other.is_x_line():
+            x_line = other
+        if self.is_y_line():
+            y_line = self
+        elif other.is_y_line():
+            y_line = other
+        if x_line is None or y_line is None:
+            return False # the lines aren't perpendicular
+
+        min_x = min(y_line.a.x, y_line.b.x)
+        max_x = max(y_line.a.x, y_line.b.x)
+        min_y = min(x_line.a.y, x_line.b.y)
+        max_y = max(x_line.a.y, x_line.b.y)
+        return (
+            min_x < x_line.a.x < max_x and
+            min_y < y_line.a.y < max_y
+        )
 
 @dataclass(frozen=True, order=True)
 class Rectangle:
@@ -73,18 +117,23 @@ class Rectangle:
         width = abs(self.a.x - self.b.x) + 1
         return width * height
     
-    def edge_points(self) -> Iterator[Point]:
-        """Get all the points that compose edges of the rectangle."""
+    def edges(self) -> Iterator[Line]:
         c1 = self.a
         c2 = Point(self.a.x, self.b.y)
         c3 = self.b
         c4 = Point(self.b.x, self.a.y)
-        yield from c1.line_between(c2)
-        yield from(c2.line_between(c3))
-        yield from(c3.line_between(c4))
-        yield from(c4.line_between(c1))
+        yield Line(c1, c2)
+        yield Line(c2, c3)
+        yield Line(c3, c4)
+        yield Line(c4, c1)
+    
+    def corners(self) -> Iterator[Point]:
+        yield self.a
+        yield Point(self.a.x, self.b.y)
+        yield self.b
+        yield Point(self.b.x, self.a.y)
 
-
+    
 
 @dataclass(frozen=True)
 class Polygon:
@@ -94,18 +143,18 @@ class Polygon:
     def max_y(self):
         return max(pt.y for pt in self.points)
     
-    def vertices(self) -> Iterator[tuple[Point, Point]]:
-        """Get all vertices around the Polygon."""
+    def edges(self) -> Iterator[Line]:
+        """Get all edges around the Polygon."""
         for a, b in pairwise(self.points):
-            yield (a, b)
+            yield Line(a, b)
         # The final point connects back to the first.
-        yield self.points[-1], self.points[0]
+        yield Line(self.points[-1], self.points[0])
         return
     
     def edges_contain_point(self, pt: Point) -> bool:
         """Check if a point is on one of the edges."""
-        for a, b in self.vertices():
-            if pt.is_on_line(a, b):
+        for line in self.edges():
+            if pt.is_on_line(line.a, line.b):
                 return True
         return False
     
@@ -131,29 +180,11 @@ class Polygon:
             y += 1
         return (n_edge_crosses % 2) ==1
     
-    def contains_rectangle_corners(self, r: Rectangle) -> bool:
-        """Check if a rectangle is fully contained in the polygon, including edges."""
-        # corners = [r.a, r.b, Point(x=r.a.x, y=r.b.y), Point(x=r.b.x, y=r.a.y)]
-        # we know that the rectangles defining-corners will be on the border of the
-        # shape, because that's where they came from. So only check the other two.
-        corners = [Point(x=r.a.x, y=r.b.y), Point(x=r.b.x, y=r.a.y)]
-        for c in corners:
-            if not self.contains_point(c):
-                return False
-        return True
-    
-    def contains_all_rectangle_edges(self, r: Rectangle) -> bool:
-        for pt in r.edge_points():
-            if not self.contains_point(pt):
-                return False
-        return True
-    
 
 def b(input: str) -> str:
     points = [Point.from_str(line) for line in input.splitlines()]
     shape = Polygon(points=tuple(points))
 
-    shape.contains_point(Point(1, 2))
     # Find the biggest rectangles; order them in a heap.
     rectangle_areas: list[tuple[int, Rectangle]] = []
     for a, b in combinations(points, 2):
@@ -165,12 +196,19 @@ def b(input: str) -> str:
     # polygon.
     while rectangle_areas:
         (area, rectangle) = heappop(rectangle_areas)
-        print(f'Checking rect of size {-1 * area}')
-        if shape.contains_rectangle_corners(rectangle):
-            # If we pass the faster check, do the full check.
-            print('>>>> Full check!!!')
-            if shape.contains_all_rectangle_edges(rectangle):
-                return str(area * -1)
+        if intersects(rectangle, shape):
+            continue # The rectangle is partly-in, partly-out, of the shape.
+        # If it doesn't intersect, it's either all-inside or all-outside the shape.
+        # We have to check all four corners. I think.
+        a, b, c, d = rectangle.corners()
+        if not shape.contains_point(a):
+            continue
+        if not shape.contains_point(b):
+            continue
+        if not shape.contains_point(c):
+            continue
+        if not shape.contains_point(d):
+            continue
 
-    raise RuntimeError
+        return str(area * -1)
 
