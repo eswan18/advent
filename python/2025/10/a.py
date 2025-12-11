@@ -1,6 +1,6 @@
 from typing import Self, Iterable
 from dataclasses import dataclass
-from itertools import combinations, repeat
+from itertools import combinations, combinations_with_replacement
 
 @dataclass(frozen=True)
 class Vector:
@@ -9,6 +9,10 @@ class Vector:
     @classmethod
     def new(cls, value: Iterable[int]) -> Self:
         return cls(v=tuple(value))
+    
+    @classmethod
+    def empty(cls, length: int) -> Self:
+        return cls(v=tuple(0 for _ in range(length)))
     
     @classmethod
     def from_indices(cls, indices: Iterable[int], length: int) -> Self:
@@ -54,9 +58,17 @@ class Spec:
     
     def fewest_presses(self) -> int:
         n_presses = 1
-    
+        while True:
+            for buttons in combinations_with_replacement(self.buttons, n_presses):
+                v = Vector.empty(len(self.indicators))
+                for b in buttons:
+                    v += b
+                if (v % 2) == self.indicators:
+                    return n_presses
+            # Restart the loop, but try larger combinations.
+            n_presses += 1 
 
 def a(input: str) -> str:
     specs = [Spec.from_line(line) for line in input.splitlines()]
-    for s in specs:
-        print(s)
+    n_presses = [s.fewest_presses() for s in specs]
+    return str(sum(n_presses))
